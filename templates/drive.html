@@ -1,0 +1,467 @@
+{% extends "base.html" %}
+
+{% block title %}Google Drive - Google Automation Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-cloud me-2"></i>
+                Google Drive Manager
+            </h2>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="refreshFiles()">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    Atualizar
+                </button>
+                <button class="btn btn-success" onclick="document.getElementById('file-upload').click()">
+                    <i class="fas fa-upload me-1"></i>
+                    Upload
+                </button>
+                <input type="file" id="file-upload" style="display: none;" onchange="uploadFile()">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title" id="total-files">-</h4>
+                        <p class="card-text">Arquivos</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-file fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title" id="total-folders">-</h4>
+                        <p class="card-text">Pastas</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-folder fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title" id="total-size">-</h4>
+                        <p class="card-text">Tamanho Total</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-hdd fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title" id="recent-files">-</h4>
+                        <p class="card-text">Recentes</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="input-group">
+            <input type="text" class="form-control" id="search-files" placeholder="Buscar arquivos e pastas...">
+            <button class="btn btn-outline-primary" onclick="searchFiles()">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <select class="form-select" id="file-type-filter" onchange="refreshFiles()">
+            <option value="">Todos os tipos</option>
+            <option value="application/vnd.google-apps.spreadsheet">Planilhas</option>
+            <option value="application/vnd.google-apps.document">Documentos</option>
+            <option value="application/vnd.google-apps.presentation">Apresentações</option>
+            <option value="application/pdf">PDFs</option>
+            <option value="image/">Imagens</option>
+            <option value="video/">Vídeos</option>
+            <option value="audio/">Áudios</option>
+        </select>
+    </div>
+</div>
+
+<!-- Files Grid -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Arquivos e Pastas
+                </h5>
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="view-mode" id="grid-view" autocomplete="off" checked>
+                    <label class="btn btn-outline-primary" for="grid-view">
+                        <i class="fas fa-th"></i>
+                    </label>
+                    <input type="radio" class="btn-check" name="view-mode" id="list-view" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="list-view">
+                        <i class="fas fa-list"></i>
+                    </label>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="files-container">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Progress Modal -->
+<div class="modal fade" id="uploadProgressModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-upload me-2"></i>
+                    Upload em Progresso
+                </h5>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Arquivo: <span id="upload-filename"></span></label>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%" id="upload-progress"></div>
+                    </div>
+                </div>
+                <div id="upload-status">Preparando upload...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentFiles = [];
+let uploadModal = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    uploadModal = new bootstrap.Modal(document.getElementById('uploadProgressModal'));
+    refreshFiles();
+    
+    // Listener para mudança de visualização
+    document.querySelectorAll('input[name="view-mode"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            displayFiles(currentFiles);
+        });
+    });
+});
+
+function refreshFiles() {
+    const fileType = document.getElementById('file-type-filter').value;
+    let query = '';
+    
+    if (fileType) {
+        if (fileType.endsWith('/')) {
+            query = `mimeType contains '${fileType}'`;
+        } else {
+            query = `mimeType='${fileType}'`;
+        }
+    }
+    
+    fetch(`/api/drive/list?query=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showAlert('Erro ao carregar arquivos: ' + data.error, 'danger');
+                return;
+            }
+            
+            currentFiles = data.files || [];
+            displayFiles(currentFiles);
+            updateStats();
+        })
+        .catch(error => {
+            console.error('Erro ao carregar arquivos:', error);
+            showAlert('Erro ao carregar arquivos', 'danger');
+        });
+}
+
+function searchFiles() {
+    const query = document.getElementById('search-files').value.toLowerCase();
+    const filteredFiles = currentFiles.filter(file => 
+        file.name.toLowerCase().includes(query)
+    );
+    displayFiles(filteredFiles);
+}
+
+function displayFiles(files) {
+    const container = document.getElementById('files-container');
+    const isGridView = document.getElementById('grid-view').checked;
+    
+    if (files.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-5">Nenhum arquivo encontrado</div>';
+        return;
+    }
+    
+    if (isGridView) {
+        displayGridView(files, container);
+    } else {
+        displayListView(files, container);
+    }
+}
+
+function displayGridView(files, container) {
+    container.innerHTML = `
+        <div class="row g-3">
+            ${files.map(file => `
+                <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+                    <div class="card h-100 file-card" onclick="openFile('${file.id}')">
+                        <div class="card-body text-center p-2">
+                            <div class="file-icon mb-2">
+                                ${getFileIcon(file.mimeType)}
+                            </div>
+                            <h6 class="card-title small mb-1" title="${file.name}">
+                                ${truncateText(file.name, 20)}
+                            </h6>
+                            <small class="text-muted">
+                                ${formatFileSize(file.size)}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function displayListView(files, container) {
+    container.innerHTML = `
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Tamanho</th>
+                        <th>Modificado</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${files.map(file => `
+                        <tr>
+                            <td>
+                                ${getFileIcon(file.mimeType)}
+                                <span class="ms-2">${file.name}</span>
+                            </td>
+                            <td>${getFileType(file.mimeType)}</td>
+                            <td>${formatFileSize(file.size)}</td>
+                            <td>${formatDate(file.modifiedTime)}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="openFile('${file.id}')">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function getFileIcon(mimeType) {
+    if (mimeType.includes('folder')) {
+        return '<i class="fas fa-folder fa-2x text-warning"></i>';
+    } else if (mimeType.includes('spreadsheet')) {
+        return '<i class="fas fa-table fa-2x text-success"></i>';
+    } else if (mimeType.includes('document')) {
+        return '<i class="fas fa-file-alt fa-2x text-primary"></i>';
+    } else if (mimeType.includes('presentation')) {
+        return '<i class="fas fa-presentation fa-2x text-danger"></i>';
+    } else if (mimeType.includes('pdf')) {
+        return '<i class="fas fa-file-pdf fa-2x text-danger"></i>';
+    } else if (mimeType.includes('image')) {
+        return '<i class="fas fa-image fa-2x text-info"></i>';
+    } else if (mimeType.includes('video')) {
+        return '<i class="fas fa-video fa-2x text-purple"></i>';
+    } else if (mimeType.includes('audio')) {
+        return '<i class="fas fa-music fa-2x text-success"></i>';
+    } else {
+        return '<i class="fas fa-file fa-2x text-secondary"></i>';
+    }
+}
+
+function getFileType(mimeType) {
+    if (mimeType.includes('folder')) return 'Pasta';
+    if (mimeType.includes('spreadsheet')) return 'Planilha';
+    if (mimeType.includes('document')) return 'Documento';
+    if (mimeType.includes('presentation')) return 'Apresentação';
+    if (mimeType.includes('pdf')) return 'PDF';
+    if (mimeType.includes('image')) return 'Imagem';
+    if (mimeType.includes('video')) return 'Vídeo';
+    if (mimeType.includes('audio')) return 'Áudio';
+    return 'Arquivo';
+}
+
+function uploadFile() {
+    const fileInput = document.getElementById('file-upload');
+    const file = fileInput.files[0];
+    
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Mostra modal de progresso
+    document.getElementById('upload-filename').textContent = file.name;
+    document.getElementById('upload-progress').style.width = '0%';
+    document.getElementById('upload-status').textContent = 'Preparando upload...';
+    uploadModal.show();
+    
+    // Simula progresso
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += Math.random() * 30;
+        if (progress > 90) progress = 90;
+        document.getElementById('upload-progress').style.width = progress + '%';
+    }, 200);
+    
+    fetch('/api/drive/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        clearInterval(progressInterval);
+        document.getElementById('upload-progress').style.width = '100%';
+        document.getElementById('upload-status').textContent = 'Upload concluído!';
+        
+        setTimeout(() => {
+            uploadModal.hide();
+            if (data.error) {
+                showAlert('Erro no upload: ' + data.error, 'danger');
+            } else {
+                showAlert('Arquivo enviado com sucesso!', 'success');
+                refreshFiles();
+            }
+        }, 1000);
+    })
+    .catch(error => {
+        clearInterval(progressInterval);
+        uploadModal.hide();
+        console.error('Erro no upload:', error);
+        showAlert('Erro no upload', 'danger');
+    });
+}
+
+function openFile(fileId) {
+    // Encontra o arquivo pelo ID
+    const file = currentFiles.find(f => f.id === fileId);
+    if (file) {
+        window.open(file.webViewLink || `https://drive.google.com/file/d/${fileId}/view`, '_blank');
+    }
+}
+
+function updateStats() {
+    const files = currentFiles.filter(f => !f.mimeType.includes('folder'));
+    const folders = currentFiles.filter(f => f.mimeType.includes('folder'));
+    
+    document.getElementById('total-files').textContent = files.length;
+    document.getElementById('total-folders').textContent = folders.length;
+    
+    const totalSize = files.reduce((sum, file) => sum + (parseInt(file.size) || 0), 0);
+    document.getElementById('total-size').textContent = formatFileSize(totalSize);
+    
+    const recentFiles = files.filter(file => {
+        const modified = new Date(file.modifiedTime);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return modified > weekAgo;
+    }).length;
+    document.getElementById('recent-files').textContent = recentFiles;
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+}
+
+function formatFileSize(bytes) {
+    if (!bytes) return 'N/A';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function truncateText(text, maxLength) {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.insertBefore(alertDiv, document.body.firstChild);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+</script>
+
+<style>
+.file-card {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.file-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.text-purple {
+    color: #6f42c1 !important;
+}
+</style>
+{% endblock %}

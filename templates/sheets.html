@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+
+{% block title %}Google Sheets - Google Automation Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-table me-2"></i>
+                Google Sheets Manager
+            </h2>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="refreshSheets()">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    Atualizar
+                </button>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createSheetModal">
+                    <i class="fas fa-plus me-1"></i>
+                    Nova Planilha
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title" id="total-sheets">-</h4>
+                        <p class="card-text">Planilhas</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-table fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title" id="recent-sheets">-</h4>
+                        <p class="card-text">Recentes</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title" id="shared-sheets">-</h4>
+                        <p class="card-text">Compartilhadas</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-share fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title" id="my-sheets">-</h4>
+                        <p class="card-text">Minhas</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="input-group">
+            <input type="text" class="form-control" id="search-sheets" placeholder="Buscar planilhas...">
+            <button class="btn btn-outline-primary" onclick="searchSheets()">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <select class="form-select" id="sort-sheets" onchange="refreshSheets()">
+            <option value="name">Ordenar por Nome</option>
+            <option value="modifiedTime" selected>Ordenar por Modificação</option>
+            <option value="createdTime">Ordenar por Criação</option>
+        </select>
+    </div>
+</div>
+
+<!-- Sheets Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Planilhas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Modificado</th>
+                                <th>Tamanho</th>
+                                <th>Proprietário</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sheets-table">
+                            <tr>
+                                <td colspan="5" class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Sheet Modal -->
+<div class="modal fade" id="createSheetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>
+                    Nova Planilha
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="create-sheet-form">
+                    <div class="mb-3">
+                        <label for="sheet-title" class="form-label">Nome da Planilha:</label>
+                        <input type="text" class="form-control" id="sheet-title" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="createSheet()">
+                    <i class="fas fa-plus me-1"></i>
+                    Criar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Sheet Modal -->
+<div class="modal fade" id="viewSheetModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-table me-2"></i>
+                    Visualizar Planilha
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="sheet-content">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <a id="open-sheet-link" href="#" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-external-link-alt me-1"></i>
+                    Abrir no Google Sheets
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentSheets = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    refreshSheets();
+});
+
+function refreshSheets() {
+    fetch('/api/sheets/list')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showAlert('Erro ao carregar planilhas: ' + data.error, 'danger');
+                return;
+            }
+            
+            currentSheets = data.spreadsheets || [];
+            displaySheets(currentSheets);
+            updateStats();
+        })
+        .catch(error => {
+            console.error('Erro ao carregar planilhas:', error);
+            showAlert('Erro ao carregar planilhas', 'danger');
+        });
+}
+
+function searchSheets() {
+    const query = document.getElementById('search-sheets').value.toLowerCase();
+    const filteredSheets = currentSheets.filter(sheet => 
+        sheet.name.toLowerCase().includes(query)
+    );
+    displaySheets(filteredSheets);
+}
+
+function displaySheets(sheets) {
+    const tbody = document.getElementById('sheets-table');
+    
+    if (sheets.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nenhuma planilha encontrada</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = sheets.map(sheet => `
+        <tr>
+            <td>
+                <i class="fas fa-table text-success me-2"></i>
+                <strong>${sheet.name || 'Sem nome'}</strong>
+            </td>
+            <td>${formatDate(sheet.modifiedTime)}</td>
+            <td>${formatFileSize(sheet.size)}</td>
+            <td>${sheet.owners ? sheet.owners[0].displayName : 'Desconhecido'}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewSheet('${sheet.id}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <a href="https://docs.google.com/spreadsheets/d/${sheet.id}" target="_blank" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-external-link-alt"></i>
+                </a>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updateStats() {
+    document.getElementById('total-sheets').textContent = currentSheets.length;
+    
+    const recentSheets = currentSheets.filter(sheet => {
+        const modified = new Date(sheet.modifiedTime);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return modified > weekAgo;
+    }).length;
+    document.getElementById('recent-sheets').textContent = recentSheets;
+    
+    const mySheets = currentSheets.filter(sheet => 
+        sheet.owners && sheet.owners[0] && sheet.owners[0].me
+    ).length;
+    document.getElementById('my-sheets').textContent = mySheets;
+    
+    const sharedSheets = currentSheets.length - mySheets;
+    document.getElementById('shared-sheets').textContent = sharedSheets;
+}
+
+function createSheet() {
+    const title = document.getElementById('sheet-title').value;
+    
+    if (!title) {
+        showAlert('Digite o nome da planilha', 'warning');
+        return;
+    }
+    
+    fetch('/api/sheets/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showAlert('Erro ao criar planilha: ' + data.error, 'danger');
+        } else {
+            showAlert('Planilha criada com sucesso!', 'success');
+            document.getElementById('create-sheet-form').reset();
+            bootstrap.Modal.getInstance(document.getElementById('createSheetModal')).hide();
+            refreshSheets();
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao criar planilha:', error);
+        showAlert('Erro ao criar planilha', 'danger');
+    });
+}
+
+function viewSheet(sheetId) {
+    const modal = new bootstrap.Modal(document.getElementById('viewSheetModal'));
+    const sheetContent = document.getElementById('sheet-content');
+    const openLink = document.getElementById('open-sheet-link');
+    
+    openLink.href = `https://docs.google.com/spreadsheets/d/${sheetId}`;
+    
+    // Mostra loading
+    sheetContent.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+    
+    // Carrega dados da planilha
+    fetch(`/api/sheets/read?id=${sheetId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                sheetContent.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Erro ao carregar planilha: ${data.error}
+                    </div>
+                `;
+            } else {
+                displaySheetData(data.data);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar planilha:', error);
+            sheetContent.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Erro ao carregar planilha
+                </div>
+            `;
+        });
+}
+
+function displaySheetData(data) {
+    const sheetContent = document.getElementById('sheet-content');
+    
+    if (!data || data.length === 0) {
+        sheetContent.innerHTML = '<div class="text-center text-muted">Planilha vazia</div>';
+        return;
+    }
+    
+    let html = '<div class="table-responsive"><table class="table table-bordered table-sm">';
+    
+    data.forEach((row, rowIndex) => {
+        html += '<tr>';
+        row.forEach((cell, cellIndex) => {
+            const tag = rowIndex === 0 ? 'th' : 'td';
+            html += `<${tag}>${cell || ''}</${tag}>`;
+        });
+        html += '</tr>';
+    });
+    
+    html += '</table></div>';
+    sheetContent.innerHTML = html;
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+}
+
+function formatFileSize(bytes) {
+    if (!bytes) return 'N/A';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.insertBefore(alertDiv, document.body.firstChild);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

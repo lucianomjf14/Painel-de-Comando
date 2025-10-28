@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block title %}Gmail - Google Automation Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-envelope me-2"></i>
+                Gmail Manager
+            </h2>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="refreshMessages()">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    Atualizar
+                </button>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#sendEmailModal">
+                    <i class="fas fa-paper-plane me-1"></i>
+                    Enviar Email
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title" id="unread-count">-</h4>
+                        <p class="card-text">Não Lidas</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-envelope fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title" id="total-messages">-</h4>
+                        <p class="card-text">Total</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-inbox fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title" id="labels-count">-</h4>
+                        <p class="card-text">Labels</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-tags fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title" id="sent-count">-</h4>
+                        <p class="card-text">Enviados</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-paper-plane fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="input-group">
+            <input type="text" class="form-control" id="search-query" placeholder="Buscar mensagens (ex: is:unread from:exemplo@gmail.com)">
+            <button class="btn btn-outline-primary" onclick="searchMessages()">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <select class="form-select" id="max-results" onchange="refreshMessages()">
+            <option value="10">10 mensagens</option>
+            <option value="25" selected>25 mensagens</option>
+            <option value="50">50 mensagens</option>
+            <option value="100">100 mensagens</option>
+        </select>
+    </div>
+</div>
+
+<!-- Messages Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Mensagens
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Assunto</th>
+                                <th>Remetente</th>
+                                <th>Data</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="messages-table">
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Send Email Modal -->
+<div class="modal fade" id="sendEmailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-paper-plane me-2"></i>
+                    Enviar Email
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="send-email-form">
+                    <div class="mb-3">
+                        <label for="email-to" class="form-label">Para:</label>
+                        <input type="email" class="form-control" id="email-to" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email-subject" class="form-label">Assunto:</label>
+                        <input type="text" class="form-control" id="email-subject" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email-body" class="form-label">Mensagem:</label>
+                        <textarea class="form-control" id="email-body" rows="10" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="sendEmail()">
+                    <i class="fas fa-paper-plane me-1"></i>
+                    Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentMessages = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadStats();
+    refreshMessages();
+});
+
+function loadStats() {
+    // Carrega contagem de não lidas
+    fetch('/api/gmail/unread-count')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('unread-count').textContent = data.count || 0;
+        })
+        .catch(error => console.error('Erro ao carregar não lidas:', error));
+    
+    // Carrega labels
+    fetch('/api/gmail/labels')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('labels-count').textContent = data.labels ? data.labels.length : 0;
+        })
+        .catch(error => console.error('Erro ao carregar labels:', error));
+}
+
+function refreshMessages() {
+    const query = document.getElementById('search-query').value;
+    const maxResults = document.getElementById('max-results').value;
+    
+    fetch(`/api/gmail/messages?query=${encodeURIComponent(query)}&max_results=${maxResults}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showAlert('Erro ao carregar mensagens: ' + data.error, 'danger');
+                return;
+            }
+            
+            currentMessages = data.messages || [];
+            displayMessages(currentMessages);
+            updateStats();
+        })
+        .catch(error => {
+            console.error('Erro ao carregar mensagens:', error);
+            showAlert('Erro ao carregar mensagens', 'danger');
+        });
+}
+
+function searchMessages() {
+    refreshMessages();
+}
+
+function displayMessages(messages) {
+    const tbody = document.getElementById('messages-table');
+    
+    if (messages.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Nenhuma mensagem encontrada</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = messages.map(msg => `
+        <tr>
+            <td>
+                <strong>${msg.subject || 'Sem assunto'}</strong>
+                ${msg.unread ? '<span class="badge bg-primary ms-2">Não lida</span>' : ''}
+            </td>
+            <td>${msg.sender || 'Desconhecido'}</td>
+            <td>${msg.date || 'Data não disponível'}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewMessage('${msg.id}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-success" onclick="replyMessage('${msg.id}')">
+                    <i class="fas fa-reply"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updateStats() {
+    document.getElementById('total-messages').textContent = currentMessages.length;
+    
+    const unreadCount = currentMessages.filter(msg => msg.unread).length;
+    document.getElementById('unread-count').textContent = unreadCount;
+    
+    const sentCount = currentMessages.filter(msg => msg.sender && msg.sender.includes('eu')).length;
+    document.getElementById('sent-count').textContent = sentCount;
+}
+
+function viewMessage(messageId) {
+    // Implementar visualização de mensagem
+    showAlert('Funcionalidade de visualização em desenvolvimento', 'info');
+}
+
+function replyMessage(messageId) {
+    // Implementar resposta de mensagem
+    showAlert('Funcionalidade de resposta em desenvolvimento', 'info');
+}
+
+function sendEmail() {
+    const to = document.getElementById('email-to').value;
+    const subject = document.getElementById('email-subject').value;
+    const body = document.getElementById('email-body').value;
+    
+    if (!to || !subject || !body) {
+        showAlert('Preencha todos os campos', 'warning');
+        return;
+    }
+    
+    fetch('/api/gmail/send', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ to, subject, body })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showAlert('Erro ao enviar email: ' + data.error, 'danger');
+        } else {
+            showAlert('Email enviado com sucesso!', 'success');
+            document.getElementById('send-email-form').reset();
+            bootstrap.Modal.getInstance(document.getElementById('sendEmailModal')).hide();
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao enviar email:', error);
+        showAlert('Erro ao enviar email', 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.insertBefore(alertDiv, document.body.firstChild);
+    
+    // Remove o alerta após 5 segundos
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}
