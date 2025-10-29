@@ -1,232 +1,127 @@
 {% extends "base.html" %}
 
-{% block title %}Home - Google Automation Dashboard{% endblock %}
+{% block title %}Início - Painel de Comando{% endblock %}
 
 {% block content %}
-<div class="row">
+<!-- User Profile Section -->
+<div class="row mb-4" id="user-profile-section" style="display: none;">
     <div class="col-12">
-        <div class="jumbotron bg-gradient-primary text-white rounded p-5 mb-4">
-            <h1 class="display-4">
-                <i class="fas fa-robot me-3"></i>
-                Google Automation Dashboard
-            </h1>
-            <p class="lead">
-                Gerencie suas planilhas, emails e arquivos do Google de forma automatizada e eficiente.
-            </p>
-            <hr class="my-4">
-            <p>
-                Acesse todas as funcionalidades do Google Sheets, Gmail e Google Drive através de uma interface web moderna e intuitiva.
-            </p>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <!-- Gmail Card -->
-    <div class="col-lg-4 col-md-6 mb-4">
-        <div class="card h-100 shadow-sm">
-            <div class="card-header bg-danger text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-envelope me-2"></i>
-                    Gmail
-                </h5>
-            </div>
-            <div class="card-body">
-                <p class="card-text">
-                    Gerencie seus emails, organize mensagens, envie emails automatizados e muito mais.
-                </p>
-                <ul class="list-unstyled">
-                    <li><i class="fas fa-check text-success me-2"></i>Listar mensagens</li>
-                    <li><i class="fas fa-check text-success me-2"></i>Enviar emails</li>
-                    <li><i class="fas fa-check text-success me-2"></i>Organizar labels</li>
-                    <li><i class="fas fa-check text-success me-2"></i>Buscar mensagens</li>
-                </ul>
-            </div>
-            <div class="card-footer">
-                <a href="{{ url_for('gmail_page') }}" class="btn btn-danger">
-                    <i class="fas fa-arrow-right me-1"></i>
-                    Acessar Gmail
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Google Sheets Card -->
-    <div class="col-lg-4 col-md-6 mb-4">
-        <div class="card h-100 shadow-sm">
-            <div class="card-header bg-success text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-table me-2"></i>
-                    Google Sheets
-                </h5>
-            </div>
-            <div class="card-body">
-                <p class="card-text">
-                    Crie, edite e gerencie planilhas do Google Sheets de forma automatizada.
-                </p>
-                <ul class="list-unstyled">
-                    <li><i class="fas fa-check text-success me-2"></i>Criar planilhas</li>
-                    <li><i class="fas fa-check text-success me-2"></i>Ler dados</li>
-                    <li><i class="fas fa-check text-success me-2"></i>Escrever dados</li>
-                    <li><i class="fas fa-check text-success me-2"></i>Formatar células</li>
-                </ul>
-            </div>
-            <div class="card-footer">
-                <a href="{{ url_for('sheets_page') }}" class="btn btn-success">
-                    <i class="fas fa-arrow-right me-1"></i>
-                    Acessar Sheets
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Google Drive Card -->
-    <div class="col-lg-4 col-md-6 mb-4">
-        <div class="card h-100 shadow-sm">
-            <div class="card-header bg-info text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-cloud me-2"></i>
-                    Google Drive
-                </h5>
-            </div>
-            <div class="card-body">
-                <p class="card-text">
-                    Gerencie arquivos, pastas e documentos no Google Drive.
-                </p>
-                <ul class="list-unstyled">
-                    <li><i class="fas fa-check text-success me-2"></i>Upload de arquivos</li>
-                    <li><i class="fas fa-check text-success me-2"></i>Listar arquivos</li>
-                    <li><i class="fas fa-check text-success me-2"></i>Criar pastas</li>
-                    <li><i class="fas fa-check text-success me-2"></i>Buscar arquivos</li>
-                </ul>
-            </div>
-            <div class="card-footer">
-                <a href="{{ url_for('drive_page') }}" class="btn btn-info">
-                    <i class="fas fa-arrow-right me-1"></i>
-                    Acessar Drive
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Status Section -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Status do Sistema
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center">
-                            <div class="status-indicator me-3" id="gmail-status">
-                                <i class="fas fa-circle text-warning"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">Gmail API</h6>
-                                <small class="text-muted" id="gmail-status-text">Verificando...</small>
-                            </div>
+        <div class="card glass-effect shadow-premium border-0">
+            <div class="card-body p-4 position-relative">
+                <div class="row align-items-center g-4">
+                    <div class="col-auto">
+                        <div class="user-avatar">
+                            <img id="user-photo" 
+                                 src="https://ui-avatars.com/api/?name=User&size=96&background=4285f4&color=fff&bold=true" 
+                                 alt="User Photo" 
+                                 loading="lazy">
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center">
-                            <div class="status-indicator me-3" id="sheets-status">
-                                <i class="fas fa-circle text-warning"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">Sheets API</h6>
-                                <small class="text-muted" id="sheets-status-text">Verificando...</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center">
-                            <div class="status-indicator me-3" id="drive-status">
-                                <i class="fas fa-circle text-warning"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">Drive API</h6>
-                                <small class="text-muted" id="drive-status-text">Verificando...</small>
-                            </div>
-                        </div>
+                    <div class="col">
+                        <h3 class="mb-2" id="user-greeting">Bem-vindo!</h3>
+                        <p class="mb-0" id="user-email">
+                            <span>Carregando...</span>
+                        </p>
+                        <p class="mb-0 text-muted mt-2" id="user-date-info" style="display: none;"></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<div class="row justify-content-center my-5">
+    <div class="col-12">
+        <div class="app-logos-wrapper">
+            <a href="{{ url_for('gmail_page') }}" class="app-logo-card gmail" title="Acessar Gmail">
+                <span class="logo-badge gmail-badge">
+                    <i class="fas fa-envelope"></i>
+                </span>
+                <img src="{{ url_for('serve_logo', filename='Gmail_icon_(2020).svg.png') }}" alt="Gmail logo" loading="lazy">
+                <span class="logo-label">Gmail</span>
+            </a>
+            <a href="{{ url_for('sheets_page') }}" class="app-logo-card sheets" title="Acessar Google Sheets">
+                <span class="logo-badge sheets-badge">
+                    <i class="fas fa-table"></i>
+                </span>
+                <img src="{{ url_for('serve_logo', filename='Google_Sheets_2020_Logo.svg.png') }}" alt="Google Sheets logo" loading="lazy">
+                <span class="logo-label">Sheets</span>
+            </a>
+            <a href="{{ url_for('drive_page') }}" class="app-logo-card drive" title="Acessar Google Drive">
+                <span class="logo-badge drive-badge">
+                    <i class="fas fa-cloud"></i>
+                </span>
+                <img src="{{ url_for('serve_logo', filename='google-drive-icon-google-product-illustration-free.png') }}" alt="Google Drive logo" loading="lazy">
+                <span class="logo-label">Drive</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Status Section removida: conteúdo disponível na página de configurações -->
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Verifica status das APIs
-    checkApiStatus();
-    
-function checkApiStatus() {
-    console.log('Verificando status das APIs...');
-    fetch('/api/status')
-        .then(response => response.json())
-        .then(data => {
-            console.log('Resposta da API:', data);
-            const statusIndicator = document.getElementById('status-indicator');
-            const gmailStatus = document.getElementById('gmail-status');
-            const sheetsStatus = document.getElementById('sheets-status');
-            const driveStatus = document.getElementById('drive-status');
-            
-            // Atualiza status individual de cada API
-            if (data.apis) {
-                updateApiStatus(gmailStatus, data.apis.gmail, 'Gmail');
-                updateApiStatus(sheetsStatus, data.apis.sheets, 'Sheets');
-                updateApiStatus(driveStatus, data.apis.drive, 'Drive');
-            } else {
-                console.error('Campo apis não encontrado na resposta:', data);
-            }
-            
-            // Atualiza status geral
-            if (data.status === 'success') {
-                statusIndicator.innerHTML = '<i class="fas fa-circle text-success me-1"></i>Conectado';
-                statusIndicator.className = 'navbar-text text-success';
-            } else if (data.status === 'partial') {
-                statusIndicator.innerHTML = '<i class="fas fa-circle text-warning me-1"></i>Parcial';
-                statusIndicator.className = 'navbar-text text-warning';
-            } else {
-                statusIndicator.innerHTML = '<i class="fas fa-circle text-danger me-1"></i>Erro';
-                statusIndicator.className = 'navbar-text text-danger';
-            }
-        })
-        .catch(error => {
-            console.error('Erro ao verificar status:', error);
-            const statusIndicator = document.getElementById('status-indicator');
-            statusIndicator.innerHTML = '<i class="fas fa-circle text-danger me-1"></i>Erro de Conexão';
-            statusIndicator.className = 'navbar-text text-danger';
-        });
-}
+    // Carrega perfil do usuário
+    loadUserProfile();
 
-function updateApiStatus(element, isWorking, apiName) {
-    const statusText = document.getElementById(`${apiName.toLowerCase()}-status-text`);
-    
-    if (isWorking) {
-        element.innerHTML = '<i class="fas fa-circle text-success"></i>';
-        element.title = `${apiName} API funcionando`;
-        if (statusText) {
-            statusText.textContent = 'Funcionando';
-            statusText.className = 'text-success';
-        }
-    } else {
-        element.innerHTML = '<i class="fas fa-circle text-danger"></i>';
-        element.title = `${apiName} API com erro`;
-        if (statusText) {
-            statusText.textContent = 'Erro';
-            statusText.className = 'text-danger';
-        }
+    function loadUserProfile() {
+        fetch('/api/user-profile')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.log('Erro ao carregar perfil:', data.error);
+                    return;
+                }
+
+                const profileSection = document.getElementById('user-profile-section');
+                const userEmail = document.getElementById('user-email').querySelector('span');
+                const userGreeting = document.getElementById('user-greeting');
+                const userPhoto = document.getElementById('user-photo');
+                const userDateInfo = document.getElementById('user-date-info');
+
+                if (data.email) {
+                    let displayName = data.name || data.given_name || data.email.split('@')[0];
+
+                    if (!data.name && !data.given_name) {
+                        displayName = data.email.split('@')[0]
+                            .replace(/[._]/g, ' ')
+                            .split(' ')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
+                    }
+
+                    userEmail.textContent = data.email;
+                    userGreeting.textContent = `Bem-vindo, ${displayName}!`;
+
+                    if (data.picture) {
+                        userPhoto.src = data.picture;
+                        userPhoto.alt = displayName;
+                    } else {
+                        const initials = displayName.split(' ').map(n => n[0]).join('').substring(0, 2);
+                        userPhoto.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&size=80&background=4285f4&color=fff&bold=true`;
+                        userPhoto.alt = displayName;
+                    }
+
+                    if (userDateInfo) {
+                        const now = new Date();
+                        const weekdayName = now.toLocaleDateString('pt-BR', { weekday: 'long' });
+                        const weekday = weekdayName.charAt(0).toUpperCase() + weekdayName.slice(1);
+                        const formattedDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+                        userDateInfo.textContent = `Hoje é ${weekday}, ${formattedDate}.`;
+                        userDateInfo.style.display = 'block';
+                    }
+
+                    profileSection.style.display = 'block';
+                    profileSection.classList.add('fade-in');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar perfil do usuário:', error);
+            });
     }
-}
 });
 </script>
 {% endblock %}

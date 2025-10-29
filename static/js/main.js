@@ -1,4 +1,4 @@
-// Main JavaScript for Google Automation Dashboard
+// Main JavaScript for Painel de Comando
 
 // Global variables
 let currentPage = 'home';
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize the application
 function initializeApp() {
-    console.log('Google Automation Dashboard initialized');
+    console.log('Painel de Comando inicializado');
     
     // Add loading states to buttons
     addLoadingStates();
@@ -80,10 +80,10 @@ function updateStatusIndicator(data) {
     if (!statusIndicator) return;
     
     if (data.status === 'success' && data.authenticated) {
-        statusIndicator.innerHTML = '<i class="fas fa-circle text-success me-1"></i>Conectado';
+        statusIndicator.textContent = 'Conectado';
         statusIndicator.className = 'navbar-text text-success';
     } else {
-        statusIndicator.innerHTML = '<i class="fas fa-circle text-danger me-1"></i>Erro de Conexão';
+        statusIndicator.textContent = 'Erro de conexão';
         statusIndicator.className = 'navbar-text text-danger';
     }
 }

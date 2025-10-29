@@ -249,7 +249,9 @@ def logout():
 def list(query, max_results):
     """Lista mensagens do Gmail"""
     gmail_manager = GmailManager()
-    messages = gmail_manager.list_messages(query, max_results)
+    result = gmail_manager.list_messages(query, max_results)
+    messages = result.get('messages', [])
+    next_token = result.get('next_page_token')
     
     if messages:
         print(f"{'Assunto':<50} {'Remetente':<30} {'Data':<20} {'ID':<30}")
@@ -259,6 +261,12 @@ def list(query, max_results):
             sender = msg['sender'][:29] if len(msg['sender']) > 29 else msg['sender']
             date = msg['date'][:19] if len(msg['date']) > 19 else msg['date']
             print(f"{subject:<50} {sender:<30} {date:<20} {msg['id']:<30}")
+        estimated_total = result.get('estimated_total')
+        if estimated_total is not None:
+            print(f"\nEstimativa total de mensagens para a busca: {estimated_total}")
+        if next_token:
+            print("\nMais resultados disponíveis. Use --max-results e --query com page_token:")
+            print(next_token)
     else:
         print("Nenhuma mensagem encontrada.")
 

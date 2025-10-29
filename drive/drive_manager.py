@@ -1,9 +1,16 @@
 import os
 import io
+import time
+import ssl
+import socket
 from typing import List, Dict, Any, Optional
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
+from googleapiclient.errors import HttpError
 from auth.google_auth import google_auth
 from config import MAX_RESULTS
+
+# Configura timeout global para sockets (2 minutos)
+socket.setdefaulttimeout(120.0)
 
 
 class GoogleDriveManager:
@@ -11,6 +18,35 @@ class GoogleDriveManager:
     
     def __init__(self):
         self.service = google_auth.get_drive_service()
+        self.max_retries = 3
+        self.retry_delay = 2  # segundos (aumentado para maior backoff)
+        self.timeout = 60  # timeout em segundos
+    
+    def _retry_on_error(self, func, *args, **kwargs):
+        """Executa função com retry em caso de erro SSL, timeout ou HTTP 5xx"""
+        for attempt in range(self.max_retries):
+            try:
+                return func(*args, **kwargs)
+            except (ssl.SSLError, socket.timeout, TimeoutError) as e:
+                if attempt < self.max_retries - 1:
+                    wait_time = self.retry_delay * (2 ** attempt)  # Backoff exponencial
+                    error_type = type(e).__name__
+                    print(f"Erro {error_type} (tentativa {attempt + 1}/{self.max_retries}). Aguardando {wait_time}s antes de tentar novamente...")
+                    time.sleep(wait_time)
+                else:
+                    print(f"Erro persistente após {self.max_retries} tentativas: {e}")
+                    raise
+            except HttpError as e:
+                # Retry apenas para erros 5xx (servidor)
+                if e.resp.status >= 500 and attempt < self.max_retries - 1:
+                    wait_time = self.retry_delay * (2 ** attempt)
+                    print(f"Erro HTTP {e.resp.status} (tentativa {attempt + 1}/{self.max_retries}). Aguardando {wait_time}s antes de tentar novamente...")
+                    time.sleep(wait_time)
+                else:
+                    raise
+            except Exception as e:
+                # Outros erros não fazem retry
+                raise
     
     def list_files(self, query: str = None, max_results: int = MAX_RESULTS) -> List[Dict[str, Any]]:
         """Lista arquivos do Google Drive"""

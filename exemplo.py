@@ -143,7 +143,8 @@ def exemplo_gmail():
     
     # Listar mensagens não lidas
     print("1. Listando mensagens não lidas...")
-    unread_messages = gmail_manager.list_messages("is:unread", 5)
+    unread_result = gmail_manager.list_messages("is:unread", 5)
+    unread_messages = unread_result.get('messages', [])
     
     if unread_messages:
         print(f"Encontradas {len(unread_messages)} mensagens não lidas:")
