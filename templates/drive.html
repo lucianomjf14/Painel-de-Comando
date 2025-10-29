@@ -8,15 +8,56 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="mb-0">Google Drive</h2>
             <div class="btn-group">
+                <button class="btn btn-warning position-relative" onclick="openNotificationsPanel()" id="notifications-btn">
+                    <i class="fas fa-bell me-1"></i>
+                    Notificações
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notification-badge" style="display: none;">
+                        0
+                    </span>
+                </button>
+                <button class="btn btn-secondary" onclick="showWorkerControlPanel()">
+                    <i class="fas fa-robot me-1"></i>
+                    Análise IA
+                </button>
                 <button class="btn btn-primary" onclick="refreshFiles()">
                     <i class="fas fa-sync-alt me-1"></i>
                     Atualizar
+                </button>
+                <button class="btn btn-info" onclick="loadSharedDrives()">
+                    <i class="fas fa-users me-1"></i>
+                    Drives Compartilhados
                 </button>
                 <button class="btn btn-success" onclick="document.getElementById('file-upload').click()">
                     <i class="fas fa-upload me-1"></i>
                     Upload
                 </button>
                 <input type="file" id="file-upload" style="display: none;" onchange="uploadFile()">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Shared Drives Section -->
+<div class="row mb-4" id="shared-drives-section" style="display: none;">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    Drives Compartilhados
+                </h5>
+                <button class="btn btn-sm btn-light" onclick="closeSharedDrives()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="shared-drives-container">
+                    <div class="text-center">
+                        <div class="spinner-border text-info" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -74,11 +115,11 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="card-title" id="recent-files">-</h4>
-                        <p class="card-text">Recentes</p>
+                        <h4 class="card-title" id="shared-files">-</h4>
+                        <p class="card-text">Compartilhados</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-clock fa-2x"></i>
+                        <i class="fas fa-share-alt fa-2x"></i>
                     </div>
                 </div>
             </div>
@@ -88,7 +129,7 @@
 
 <!-- Search and Filters -->
 <div class="row mb-4">
-    <div class="col-md-8">
+    <div class="col-md-6">
         <div class="input-group">
             <input type="text" class="form-control" id="search-files" placeholder="Buscar arquivos e pastas...">
             <button class="btn btn-outline-primary" onclick="searchFiles()">
@@ -96,7 +137,7 @@
             </button>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <select class="form-select" id="file-type-filter" onchange="refreshFiles()">
             <option value="">Todos os tipos</option>
             <option value="application/vnd.google-apps.spreadsheet">Planilhas</option>
@@ -106,6 +147,13 @@
             <option value="image/">Imagens</option>
             <option value="video/">Vídeos</option>
             <option value="audio/">Áudios</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="file-source-filter" onchange="refreshFiles()">
+            <option value="all">Todos os arquivos</option>
+            <option value="shared">Compartilhados comigo</option>
+            <option value="mine">Meus arquivos</option>
         </select>
     </div>
 </div>
@@ -165,6 +213,199 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de Notificações de Análise -->
+<div class="modal fade" id="notificationsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-bell me-2"></i>
+                    Documentos Pendentes de Revisão
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="notifications-loading" class="text-center py-5">
+                    <div class="spinner-border text-warning" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="mt-3">Carregando notificações...</p>
+                </div>
+                
+                <div id="notifications-content" style="display: none;">
+                    <!-- Estatísticas -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-warning text-dark">
+                                <div class="card-body text-center">
+                                    <h2 id="total-pending-count">0</h2>
+                                    <p class="mb-0">Documentos Pendentes</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h2 id="total-employees-count">0</h2>
+                                    <p class="mb-0">Funcionários Afetados</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <button class="btn btn-light btn-lg w-100" onclick="approveAllPending()">
+                                        <i class="fas fa-check-double me-2"></i>
+                                        Aprovar Todos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Sugestões por Funcionário -->
+                    <div id="notifications-by-employee"></div>
+                </div>
+
+                <div id="notifications-empty" style="display: none;" class="text-center py-5">
+                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                    <h4>Nenhuma Pendência!</h4>
+                    <p class="text-muted">Todos os documentos estão revisados.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Controle do Worker -->
+<div class="modal fade" id="workerControlModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-robot me-2"></i>
+                    Controle de Análise Inteligente
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Status do Worker -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">Status do Worker</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Status:</strong> <span id="worker-status-badge" class="badge bg-secondary">Verificando...</span></p>
+                                <p><strong>Intervalo:</strong> <span id="worker-interval">-</span> segundos</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Documentos na Fila:</strong> <span id="worker-pending-count" class="badge bg-warning">-</span></p>
+                                <button class="btn btn-sm btn-primary" onclick="checkWorkerStatus()">
+                                    <i class="fas fa-sync me-1"></i>
+                                    Atualizar Status
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">Ações</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" onclick="startWorker()">
+                                <i class="fas fa-play me-2"></i>
+                                Iniciar Worker
+                            </button>
+                            <button class="btn btn-primary" onclick="scanAllDocuments()" id="scan-btn">
+                                <i class="fas fa-search me-2"></i>
+                                Escanear Todos os Documentos (EMPRESAS)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progresso em Tempo Real -->
+                <div class="card mb-3" id="progress-panel" style="display: none;">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-spinner fa-spin me-2"></i>
+                            Análise em Andamento
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <strong>Progresso Geral</strong>
+                                <span id="progress-percentage">0%</span>
+                            </div>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" 
+                                     style="width: 0%" 
+                                     id="progress-bar">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <small class="text-muted">Funcionário Atual:</small>
+                                <div><strong id="current-employee">-</strong></div>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">Documento Atual:</small>
+                                <div><strong id="current-document">-</strong></div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <div class="badge bg-info w-100 p-2">
+                                    <div style="font-size: 1.5rem;" id="total-scanned">0</div>
+                                    <small>Escaneados</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="badge bg-success w-100 p-2">
+                                    <div style="font-size: 1.5rem;" id="total-analyzed">0</div>
+                                    <small>Analisados</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="badge bg-warning text-dark w-100 p-2">
+                                    <div style="font-size: 1.5rem;" id="total-suggestions">0</div>
+                                    <small>Sugestões</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3" id="progress-log" style="max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 0.85rem;">
+                            <div class="text-muted">Aguardando início...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações -->
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle me-2"></i>Como Funciona</h6>
+                    <ul class="mb-0">
+                        <li><strong>Worker:</strong> Processa automaticamente documentos na fila a cada 30 segundos</li>
+                        <li><strong>Scanner:</strong> Adiciona todos os documentos dos funcionários à fila de análise</li>
+                        <li><strong>Análise:</strong> Identifica tipo de documento e sugere nome padronizado</li>
+                        <li><strong>Aprovação:</strong> Você revisa e aprova as sugestões através do painel de notificações</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -176,6 +417,15 @@ document.addEventListener('DOMContentLoaded', function() {
     uploadModal = new bootstrap.Modal(document.getElementById('uploadProgressModal'));
     refreshFiles();
     
+    // Carrega drives compartilhados automaticamente após pequeno delay
+    setTimeout(() => {
+        loadSharedDrives();
+    }, 500);
+    
+    // Atualiza contador de notificações
+    updateNotificationBadge();
+    setInterval(updateNotificationBadge, 30000); // Atualiza a cada 30s
+    
     // Listener para mudança de visualização
     document.querySelectorAll('input[name="view-mode"]').forEach(radio => {
         radio.addEventListener('change', function() {
@@ -185,7 +435,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function refreshFiles() {
-    const fileType = document.getElementById('file-type-filter').value;
+    const fileTypeElement = document.getElementById('file-type-filter');
+    const sourceFilterElement = document.getElementById('file-source-filter');
+    
+    const fileType = fileTypeElement ? fileTypeElement.value : '';
+    const sourceFilter = sourceFilterElement ? sourceFilterElement.value : 'all';
+    
     let query = '';
     
     if (fileType) {
@@ -196,22 +451,913 @@ function refreshFiles() {
         }
     }
     
-    fetch(`/api/drive/list?query=${encodeURIComponent(query)}`)
+    // Determina qual endpoint usar baseado no filtro de origem
+    let endpoint = '/api/drive/list';
+    if (sourceFilter === 'shared') {
+        endpoint = '/api/drive/shared';
+    } else if (sourceFilter === 'mine') {
+        // Adiciona filtro para arquivos próprios
+        query = query ? `${query} and 'me' in owners` : "'me' in owners";
+    }
+    
+    const url = `${endpoint}?query=${encodeURIComponent(query)}`;
+    
+    fetch(url)
         .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                showAlert('Erro ao carregar arquivos: ' + data.error, 'danger');
+        .then(result => {
+            if (result.status === 'error') {
+                showAlert('Erro ao carregar arquivos: ' + result.message, 'danger');
                 return;
             }
             
+            const data = result.data || {};
             currentFiles = data.files || [];
             displayFiles(currentFiles);
             updateStats();
         })
         .catch(error => {
             console.error('Erro ao carregar arquivos:', error);
-            showAlert('Erro ao carregar arquivos', 'danger');
+            showAlert('Erro ao carregar arquivos: ' + error.message, 'danger');
         });
+}
+
+function loadSharedDrives() {
+    const section = document.getElementById('shared-drives-section');
+    const container = document.getElementById('shared-drives-container');
+    
+    section.style.display = 'block';
+    container.innerHTML = '<div class="text-center"><div class="spinner-border text-info" role="status"><span class="visually-hidden">Carregando...</span></div></div>';
+    
+    // Timeout de segurança - 10 segundos
+    const timeoutId = setTimeout(() => {
+        container.innerHTML = '<div class="alert alert-warning">⏱️ Timeout ao carregar drives. <button class="btn btn-sm btn-primary ms-2" onclick="loadSharedDrives()">Tentar novamente</button></div>';
+    }, 10000);
+    
+    fetch('/api/drive/shared-drives')
+        .then(response => {
+            clearTimeout(timeoutId);
+            return response.json();
+        })
+        .then(result => {
+            if (result.status === 'error') {
+                container.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
+                return;
+            }
+            
+            const drives = result.data.drives || [];
+            
+            if (drives.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted py-3">Nenhum Drive compartilhado encontrado</div>';
+                return;
+            }
+            
+            displaySharedDrives(drives, container);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar Drives compartilhados:', error);
+            container.innerHTML = '<div class="alert alert-danger">Erro ao carregar Drives compartilhados</div>';
+        });
+}
+
+function displaySharedDrives(drives, container) {
+    container.innerHTML = `
+        <div class="mb-3">
+            <h6><i class="fas fa-users me-2"></i>${drives.length} Drive(s) Compartilhado(s)</h6>
+        </div>
+        <div class="row g-3">
+            ${drives.map(drive => `
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-info hover-shadow" style="cursor: pointer;" onclick="loadSharedDriveFilesRealTime('${drive.id}', '${drive.name.replace(/'/g, "\\'")}')">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3">
+                                    <i class="fas fa-users fa-3x text-info"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title mb-2">${drive.name}</h5>
+                                    <p class="card-text small text-muted mb-2">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Criado em ${formatDate(drive.createdTime)}
+                                    </p>
+                                    <button class="btn btn-sm btn-outline-info" onclick="event.stopPropagation(); loadSharedDriveFilesRealTime('${drive.id}', '${drive.name.replace(/'/g, "\\'")}')">
+                                        <i class="fas fa-folder-open me-1"></i>
+                                        Ver arquivos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function loadSharedDriveFilesRealTime(driveId, driveName) {
+    closeSharedDrives();
+    
+    const container = document.getElementById('files-container');
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2">Carregando arquivos em tempo real...</p></div>';
+    
+    // Carrega pasta raiz diretamente da API do Google
+    fetch(`/api/drive/shared-drives/${driveId}/folder`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'error') {
+                showAlert('Erro: ' + result.message, 'danger');
+                return;
+            }
+            
+            const contents = result.data.contents;
+            let folders = contents.folders || [];
+            let files = contents.files || [];
+            
+            // Atualiza o header com controles de ordenação
+            const filesCard = container.closest('.card');
+            const cardHeader = filesCard.querySelector('.card-header h5');
+            cardHeader.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <div>
+                        <i class="fas fa-users me-2"></i>
+                        ${driveName}
+                        <span class="badge bg-primary ms-2">${folders.length} pastas</span>
+                        <span class="badge bg-success ms-1">${files.length} arquivos</span>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-light" onclick="sortDriveContent('${driveId}', 'name-asc')" title="A → Z">
+                            <i class="fas fa-sort-alpha-down"></i>
+                        </button>
+                        <button class="btn btn-outline-light" onclick="sortDriveContent('${driveId}', 'name-desc')" title="Z → A">
+                            <i class="fas fa-sort-alpha-up"></i>
+                        </button>
+                        <button class="btn btn-outline-light" onclick="sortDriveContent('${driveId}', 'date-desc')" title="Mais recente">
+                            <i class="fas fa-clock"></i>
+                        </button>
+                        <button class="btn btn-outline-light" onclick="refreshFiles(); this.parentElement.parentElement.parentElement.innerHTML='<i class=\\'fas fa-list me-2\\'></i>Arquivos e Pastas';">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Armazena dados globalmente para re-ordenação
+            window.currentDriveData = {
+                driveId: driveId,
+                driveName: driveName,
+                folders: folders,
+                files: files
+            };
+            
+            displayRealTimeFolderTree(driveId, null, folders, files, container);
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showAlert('Erro ao carregar drive', 'danger');
+        });
+}
+
+function displayRealTimeFolderTree(driveId, parentId, folders, files, container) {
+    container.innerHTML = `
+        <div id="folder-tree-root">
+            ${renderRealTimeFolderLevel(driveId, null, folders, files, 0)}
+        </div>
+    `;
+}
+
+function renderRealTimeFolderLevel(driveId, parentId, folders, files, level) {
+    const indent = level * 20;
+    
+    return `
+        <div class="folder-level" style="margin-left: ${indent}px;">
+            ${folders.map(folder => {
+                // Detecta se é pasta de funcionário (padrão: número - nome)
+                const isEmployeeFolder = level > 0 && /^\d+\s*-\s*.+/.test(folder.name);
+                
+                return `
+                <div class="folder-item mb-2" data-folder-id="${folder.id}">
+                    <div class="d-flex align-items-center p-2 rounded hover-bg-light border" 
+                         onclick="toggleRealTimeFolder('${driveId}', '${folder.id}', this.parentElement, ${level})">
+                        <i class="fas fa-chevron-right folder-chevron me-2" style="font-size: 0.7rem;"></i>
+                        <i class="fas fa-folder text-warning me-2"></i>
+                        <span class="flex-grow-1 folder-name">${folder.name}</span>
+                        
+                        ${isEmployeeFolder ? `
+                        <div class="employee-actions me-2" onclick="event.stopPropagation();">
+                            <button class="btn btn-employee-action btn-outline-info" 
+                                    onclick="validateEmployeeStructure('${folder.id}', '${driveId}', '${folder.name.replace(/'/g, "\\'")}')"
+                                    title="Validar estrutura de pastas">
+                                <i class="fas fa-check-circle"></i>
+                            </button>
+                            <button class="btn btn-employee-action btn-outline-success" 
+                                    onclick="completeEmployeeStructure('${folder.id}', '${driveId}', '${folder.name.replace(/'/g, "\\'")}')"
+                                    title="Completar estrutura faltante">
+                                <i class="fas fa-plus-circle"></i>
+                            </button>
+                            <button class="btn btn-employee-action btn-outline-primary" 
+                                    onclick="createEmployeeStructure('${folder.id}', '${driveId}', '${folder.name.replace(/'/g, "\\'")}')"
+                                    title="Criar estrutura completa">
+                                <i class="fas fa-folder-plus"></i>
+                            </button>
+                            <button class="btn btn-employee-action btn-outline-warning" 
+                                    onclick="analyzeEmployeeDocuments('${folder.id}', '${driveId}', '${folder.name.replace(/'/g, "\\'")}')"
+                                    title="Analisar e padronizar documentos com IA">
+                                <i class="fas fa-robot"></i>
+                            </button>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="btn-group btn-group-sm" onclick="event.stopPropagation();">
+                            <button class="btn btn-sm btn-outline-primary" 
+                                    onclick="downloadFile('${folder.id}', '${folder.name.replace(/'/g, "\\'")}', 'application/vnd.google-apps.folder')"
+                                    title="Baixar pasta">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" 
+                                    onclick="deleteFile('${folder.id}', '${folder.name.replace(/'/g, "\\'")}', 'application/vnd.google-apps.folder')"
+                                    title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="folder-contents" style="display:none;"></div>
+                </div>
+            `;}).join('')}
+            
+            ${files.map(file => `
+                <div class="file-item p-2 mb-1 rounded border d-flex align-items-center hover-bg-light">
+                    <i class="${getFileIcon(file.mimeType)} me-2"></i>
+                    <span class="flex-grow-1">${file.name}</span>
+                    <span class="badge bg-info me-2">${formatFileSize(file.size)}</span>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="downloadFile('${file.id}', '${file.name.replace(/'/g, "\\'")}', '${file.mimeType}')"
+                                title="Baixar">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" 
+                                onclick="deleteFile('${file.id}', '${file.name.replace(/'/g, "\\'")}', '${file.mimeType}')"
+                                title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function toggleRealTimeFolder(driveId, folderId, folderElement, currentLevel) {
+    const chevron = folderElement.querySelector('.folder-chevron');
+    const contentsDiv = folderElement.querySelector('.folder-contents');
+    const isExpanded = chevron.classList.contains('fa-chevron-down');
+    
+    if (isExpanded) {
+        // Recolher pasta
+        chevron.classList.remove('fa-chevron-down');
+        chevron.classList.add('fa-chevron-right');
+        contentsDiv.style.display = 'none';
+    } else {
+        // Expandir pasta
+        chevron.classList.remove('fa-chevron-right');
+        chevron.classList.add('fa-chevron-down');
+        
+        // Sempre carregar em tempo real (sem cache)
+        contentsDiv.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary"></div><small class="ms-2">Carregando...</small></div>';
+        contentsDiv.style.display = 'block';
+        
+        // Função para extrair número do início do nome
+        function extractNumber(name) {
+            const match = name.match(/^(\d+(?:\.\d+)?)/);
+            return match ? parseFloat(match[1]) : Infinity;
+        }
+        
+        // Carrega conteúdo direto da API do Google
+        fetch(`/api/drive/shared-drives/${driveId}/folder/${folderId}`)
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    const contents = result.data.contents;
+                    let folders = contents.folders || [];
+                    let files = contents.files || [];
+                    
+                    // Ordena por número primeiro, depois alfabeticamente
+                    folders.sort((a, b) => {
+                        const numA = extractNumber(a.name);
+                        const numB = extractNumber(b.name);
+                        if (numA !== numB) return numA - numB;
+                        return a.name.localeCompare(b.name, 'pt-BR');
+                    });
+                    files.sort((a, b) => {
+                        const numA = extractNumber(a.name);
+                        const numB = extractNumber(b.name);
+                        if (numA !== numB) return numA - numB;
+                        return a.name.localeCompare(b.name, 'pt-BR');
+                    });
+                    
+                    contentsDiv.innerHTML = renderRealTimeFolderLevel(driveId, folderId, folders, files, currentLevel + 1);
+                } else {
+                    contentsDiv.innerHTML = `<div class="alert alert-warning alert-sm m-2">Erro ao carregar pasta</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                contentsDiv.innerHTML = `<div class="alert alert-danger alert-sm m-2">Erro ao carregar pasta</div>`;
+            });
+    }
+}
+
+function sortDriveContent(driveId, sortType) {
+    if (!window.currentDriveData) return;
+    
+    const data = window.currentDriveData;
+    let folders = [...data.folders];
+    let files = [...data.files];
+    
+    // Função para extrair número do início do nome
+    function extractNumber(name) {
+        const match = name.match(/^(\d+(?:\.\d+)?)/);
+        return match ? parseFloat(match[1]) : Infinity;
+    }
+    
+    // Aplica ordenação
+    switch(sortType) {
+        case 'name-asc':
+            // Ordena por número primeiro, depois alfabeticamente
+            folders.sort((a, b) => {
+                const numA = extractNumber(a.name);
+                const numB = extractNumber(b.name);
+                if (numA !== numB) return numA - numB;
+                return a.name.localeCompare(b.name, 'pt-BR');
+            });
+            files.sort((a, b) => {
+                const numA = extractNumber(a.name);
+                const numB = extractNumber(b.name);
+                if (numA !== numB) return numA - numB;
+                return a.name.localeCompare(b.name, 'pt-BR');
+            });
+            break;
+        case 'name-desc':
+            // Ordena por número decrescente, depois alfabeticamente invertido
+            folders.sort((a, b) => {
+                const numA = extractNumber(a.name);
+                const numB = extractNumber(b.name);
+                if (numA !== numB) return numB - numA;
+                return b.name.localeCompare(a.name, 'pt-BR');
+            });
+            files.sort((a, b) => {
+                const numA = extractNumber(a.name);
+                const numB = extractNumber(b.name);
+                if (numA !== numB) return numB - numA;
+                return b.name.localeCompare(a.name, 'pt-BR');
+            });
+            break;
+        case 'date-desc':
+            folders.sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
+            files.sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
+            break;
+        case 'date-asc':
+            folders.sort((a, b) => new Date(a.modifiedTime) - new Date(b.modifiedTime));
+            files.sort((a, b) => new Date(a.modifiedTime) - new Date(b.modifiedTime));
+            break;
+    }
+    
+    // Atualiza dados globais
+    window.currentDriveData.folders = folders;
+    window.currentDriveData.files = files;
+    
+    // Re-renderiza
+    const container = document.getElementById('files-container');
+    displayRealTimeFolderTree(driveId, null, folders, files, container);
+    
+    // Feedback visual
+    const sortIcons = {
+        'name-asc': 'A → Z (por número)',
+        'name-desc': 'Z → A (por número)',
+        'date-desc': 'Mais recente',
+        'date-asc': 'Mais antigo'
+    };
+    
+    showAlert(`Ordenado: ${sortIcons[sortType]}`, 'info', 2000);
+}
+
+function displayCachedDriveContents(driveId, contents, container) {
+    const folders = contents.folders || [];
+    const files = contents.files || [];
+    
+    container.innerHTML = `
+        <div class="mb-3">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" id="searchCacheInput" 
+                       placeholder="Buscar neste drive..." 
+                       onkeyup="searchInCache('${driveId}', this.value)">
+            </div>
+        </div>
+        
+        <div id="search-results" style="display:none;" class="mb-3"></div>
+        
+        <div id="folder-tree">
+            ${folders.length === 0 && files.length === 0 ? 
+                '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Este drive está vazio</div>' : 
+                renderFolderLevel(driveId, null, folders, files, 0)
+            }
+        </div>
+    `;
+}
+
+function renderFolderLevel(driveId, parentId, folders, files, level) {
+    const indent = level * 20;
+    
+    return `
+        <div class="folder-level" style="margin-left: ${indent}px;">
+            ${folders.map(folder => `
+                <div class="folder-item mb-2" data-folder-id="${folder.id}">
+                    <div class="d-flex align-items-center p-2 rounded hover-bg-light border" 
+                         onclick="toggleCachedFolder('${driveId}', '${folder.id}', this.parentElement)">
+                        <i class="fas fa-chevron-right folder-chevron me-2" style="font-size: 0.7rem;"></i>
+                        <i class="fas fa-folder text-warning me-2"></i>
+                        <span class="flex-grow-1 folder-name">${folder.name}</span>
+                        <span class="badge bg-secondary me-2">${folder.file_count || 0}</span>
+                        <div class="btn-group btn-group-sm" onclick="event.stopPropagation();">
+                            <button class="btn btn-sm btn-outline-primary" 
+                                    onclick="downloadFile('${folder.id}', '${folder.name.replace(/'/g, "\\'")}', 'application/vnd.google-apps.folder')"
+                                    title="Baixar pasta">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-info" 
+                                    onclick="viewFolderStats('${driveId}', '${folder.id}', '${folder.name.replace(/'/g, "\\'")}')"
+                                    title="Estatísticas">
+                                <i class="fas fa-chart-bar"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="folder-contents" style="display:none;"></div>
+                </div>
+            `).join('')}
+            
+            ${files.map(file => `
+                <div class="file-item p-2 mb-1 rounded border d-flex align-items-center hover-bg-light">
+                    <i class="${getFileIcon(file.mimeType)} me-2"></i>
+                    <span class="flex-grow-1">${file.name}</span>
+                    <span class="badge bg-info me-2">${formatFileSize(file.size)}</span>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="downloadFile('${file.id}', '${file.name.replace(/'/g, "\\'")}', '${file.mimeType}')"
+                                title="Baixar">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" 
+                                onclick="deleteFile('${file.id}', '${file.name.replace(/'/g, "\\'")}', '${file.mimeType}')"
+                                title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function toggleCachedFolder(driveId, folderId, folderElement) {
+    const chevron = folderElement.querySelector('.folder-chevron');
+    const contentsDiv = folderElement.querySelector('.folder-contents');
+    const isExpanded = chevron.classList.contains('fa-chevron-down');
+    
+    if (isExpanded) {
+        // Recolher pasta
+        chevron.classList.remove('fa-chevron-down');
+        chevron.classList.add('fa-chevron-right');
+        contentsDiv.style.display = 'none';
+    } else {
+        // Expandir pasta
+        chevron.classList.remove('fa-chevron-right');
+        chevron.classList.add('fa-chevron-down');
+        
+        // Verificar se já foi carregada
+        if (contentsDiv.innerHTML.trim() === '') {
+            contentsDiv.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm"></div></div>';
+            contentsDiv.style.display = 'block';
+            
+            // Carregar conteúdo do cache
+            fetch(`/api/drive/shared-drives/${driveId}/cached/folder/${folderId}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        const contents = result.data.contents;
+                        const level = parseInt(folderElement.style.marginLeft || 0) / 20 + 1;
+                        contentsDiv.innerHTML = renderFolderLevel(driveId, folderId, contents.folders, contents.files, level);
+                    } else {
+                        contentsDiv.innerHTML = `<div class="alert alert-warning alert-sm">Erro ao carregar pasta</div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    contentsDiv.innerHTML = `<div class="alert alert-danger alert-sm">Erro ao carregar pasta</div>`;
+                });
+        } else {
+            contentsDiv.style.display = 'block';
+        }
+    }
+}
+
+function searchInCache(driveId, query) {
+    const searchResults = document.getElementById('search-results');
+    const folderTree = document.getElementById('folder-tree');
+    
+    if (query.length < 3) {
+        searchResults.style.display = 'none';
+        folderTree.style.display = 'block';
+        return;
+    }
+    
+    searchResults.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm"></div></div>';
+    searchResults.style.display = 'block';
+    folderTree.style.display = 'none';
+    
+    fetch(`/api/drive/shared-drives/${driveId}/search?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                const items = result.data.items;
+                
+                if (items.length === 0) {
+                    searchResults.innerHTML = `
+                        <div class="alert alert-info">
+                            <i class="fas fa-search me-2"></i>
+                            Nenhum resultado encontrado para "${query}"
+                        </div>
+                    `;
+                    return;
+                }
+                
+                searchResults.innerHTML = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-search me-2"></i>
+                                ${items.length} resultado(s) para "${query}"
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                ${items.map(item => `
+                                    <div class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <i class="${item.is_folder ? 'fas fa-folder text-warning' : getFileIcon(item.mimeType)} me-2"></i>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-bold">${item.name}</div>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-folder-open me-1"></i>
+                                                    ${item.path || '/'}
+                                                </small>
+                                            </div>
+                                            ${item.size ? `<span class="badge bg-info me-2">${formatFileSize(item.size)}</span>` : ''}
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-sm btn-outline-primary" 
+                                                        onclick="downloadFile('${item.id}', '${item.name.replace(/'/g, "\\'")}', '${item.mimeType}')"
+                                                        title="Baixar">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                searchResults.innerHTML = `<div class="alert alert-danger">Erro: ${result.message}</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            searchResults.innerHTML = `<div class="alert alert-danger">Erro ao buscar</div>`;
+        });
+}
+
+function viewFolderStats(driveId, folderId, folderName) {
+    const modalId = 'folderStatsModal';
+    let modal = document.getElementById(modalId);
+    
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = modalId;
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Estatísticas da Pasta
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="statsContent">
+                        <div class="text-center py-4">
+                            <div class="spinner-border"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    fetch(`/api/drive/shared-drives/${driveId}/stats/${folderId}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                const stats = result.data.stats;
+                document.getElementById('statsContent').innerHTML = `
+                    <h6 class="mb-3">${folderName}</h6>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-folder fa-2x text-warning mb-2"></i>
+                                    <h3 class="mb-0">${stats.total_folders || 0}</h3>
+                                    <small class="text-muted">Pastas</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file fa-2x text-primary mb-2"></i>
+                                    <h3 class="mb-0">${stats.total_files || 0}</h3>
+                                    <small class="text-muted">Arquivos</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-hdd fa-2x text-success mb-2"></i>
+                                    <h3 class="mb-0">${formatFileSize(stats.total_size || 0)}</h3>
+                                    <small class="text-muted">Tamanho Total</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-database fa-2x text-info mb-2"></i>
+                                    <h3 class="mb-0">${(stats.total_folders || 0) + (stats.total_files || 0)}</h3>
+                                    <small class="text-muted">Total de Itens</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('statsContent').innerHTML = `
+                    <div class="alert alert-danger">Erro: ${result.message}</div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            document.getElementById('statsContent').innerHTML = `
+                <div class="alert alert-danger">Erro ao carregar estatísticas</div>
+            `;
+        });
+}
+
+
+
+// Cache para pastas já carregadas
+const folderCache = new Map();
+let currentDriveId = null;
+let currentDriveName = null;
+
+function loadSharedDriveFiles(driveId, driveName) {
+    currentDriveId = driveId;
+    currentDriveName = driveName;
+    folderCache.clear(); // Limpa cache
+    
+    // Fecha a seção de Drives compartilhados
+    closeSharedDrives();
+    
+    // Mostra loading
+    const container = document.getElementById('files-container');
+    container.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="text-muted">Carregando estatísticas e pasta raiz...</p>
+            <small class="text-muted">Pastas serão carregadas sob demanda quando você expandir</small>
+        </div>
+    `;
+    
+    // Carrega estatísticas primeiro (rápido)
+    Promise.all([
+        fetch(`/api/drive/shared-drives/${driveId}/stats`).then(r => r.json()),
+        fetch(`/api/drive/shared-drives/${driveId}/folder`).then(r => r.json())
+    ])
+    .then(([statsResult, contentsResult]) => {
+        console.log('Drive Stats:', statsResult);
+        console.log('Root Contents:', contentsResult);
+        
+        if (statsResult.status === 'error' || contentsResult.status === 'error') {
+            showAlert('Erro ao carregar Drive', 'danger');
+            return;
+        }
+        
+        const stats = statsResult.data.stats || {};
+        const contents = contentsResult.data.contents || {};
+        
+        // Atualiza header com estatísticas
+        const filesCard = container.closest('.card');
+        const cardHeader = filesCard.querySelector('.card-header h5');
+        cardHeader.innerHTML = `
+            <i class="fas fa-users me-2"></i>
+            ${driveName}
+            <span class="badge bg-primary ms-2">${stats.total_folders || 0} pastas</span>
+            <span class="badge bg-success ms-1">${stats.total_files || 0} arquivos</span>
+            <span class="badge bg-info ms-1">${formatFileSize(stats.total_size || 0)}</span>
+            <button class="btn btn-sm btn-outline-light ms-2" onclick="refreshFiles(); this.parentElement.innerHTML='<i class=\'fas fa-list me-2\'></i>Arquivos e Pastas';">
+                <i class="fas fa-times me-1"></i>
+                Voltar para Meu Drive
+            </button>
+        `;
+        
+        // Renderiza estrutura inicial
+        displayLazyFolderTree(contents, container);
+    })
+    .catch(error => {
+        console.error('Erro ao carregar Drive:', error);
+        showAlert('Erro ao carregar Drive', 'danger');
+    });
+}
+
+function displayLazyFolderTree(contents, container) {
+    const folders = contents.folders || [];
+    const files = contents.files || [];
+    
+    if (folders.length === 0 && files.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-5">Drive vazio</div>';
+        return;
+    }
+    
+    let html = '<div class="folder-tree">';
+    
+    // Arquivos na raiz
+    if (files.length > 0) {
+        html += '<div class="tree-level mb-3">';
+        html += `<h6 class="text-muted mb-2"><i class="fas fa-file me-2"></i>Arquivos na raiz (${files.length})</h6>`;
+        html += '<div class="ms-3">';
+        files.forEach(file => {
+            html += renderFileItem(file);
+        });
+        html += '</div></div>';
+    }
+    
+    // Pastas na raiz
+    if (folders.length > 0) {
+        html += '<div class="tree-level mb-3">';
+        html += `<h6 class="text-muted mb-2"><i class="fas fa-folder me-2"></i>Pastas (${folders.length})</h6>`;
+        folders.forEach(folder => {
+            html += renderLazyFolderItem(folder, 0);
+        });
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function renderLazyFolderItem(folder, level) {
+    const indent = level * 20;
+    const folderId = 'folder-' + folder.id.replace(/[^a-zA-Z0-9]/g, '_');
+    
+    return `
+        <div class="folder-item mb-2" style="margin-left: ${indent}px;">
+            <div class="d-flex align-items-center p-2 bg-light rounded hover-bg-primary" style="cursor: pointer;" onclick="toggleLazyFolder('${folder.id}', '${folderId}', ${level})">
+                <i class="fas fa-folder fa-lg text-warning me-2"></i>
+                <i class="fas fa-chevron-right me-2 text-muted folder-toggle" id="${folderId}-toggle"></i>
+                <strong>${folder.name}</strong>
+                <span class="badge bg-secondary ms-2" id="${folderId}-count">...</span>
+                <div class="ms-auto">
+                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); openFile('${folder.id}')" title="Abrir">
+                        <i class="fas fa-external-link-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="folder-contents ms-4" id="${folderId}" style="display: none;">
+                <div class="text-center py-2">
+                    <small class="text-muted">Carregando...</small>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function toggleLazyFolder(folderId, domId, level) {
+    const folderContent = document.getElementById(domId);
+    const toggleIcon = document.getElementById(domId + '-toggle');
+    const countBadge = document.getElementById(domId + '-count');
+    
+    if (folderContent.style.display === 'none') {
+        // Expandir
+        folderContent.style.display = 'block';
+        if (toggleIcon) toggleIcon.className = 'fas fa-chevron-down me-2 text-muted folder-toggle';
+        
+        // Carrega conteúdo se ainda não foi carregado
+        if (!folderCache.has(folderId)) {
+            folderContent.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>';
+            
+            fetch(`/api/drive/shared-drives/${currentDriveId}/folder/${folderId}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'error') {
+                        folderContent.innerHTML = '<div class="text-danger small">Erro ao carregar</div>';
+                        return;
+                    }
+                    
+                    const contents = result.data.contents || {};
+                    folderCache.set(folderId, contents);
+                    
+                    // Atualiza badge com contagem
+                    const totalItems = (contents.folders?.length || 0) + (contents.files?.length || 0);
+                    countBadge.textContent = `${totalItems} itens`;
+                    
+                    // Renderiza conteúdo
+                    renderFolderContents(folderId, domId, contents, level + 1);
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar pasta:', error);
+                    folderContent.innerHTML = '<div class="text-danger small">Erro ao carregar</div>';
+                });
+        }
+    } else {
+        // Colapsar
+        folderContent.style.display = 'none';
+        if (toggleIcon) toggleIcon.className = 'fas fa-chevron-right me-2 text-muted folder-toggle';
+    }
+}
+
+function renderFolderContents(folderId, domId, contents, level) {
+    const folderContent = document.getElementById(domId);
+    const files = contents.files || [];
+    const folders = contents.folders || [];
+    
+    if (files.length === 0 && folders.length === 0) {
+        folderContent.innerHTML = '<div class="text-muted small py-2">Pasta vazia</div>';
+        return;
+    }
+    
+    let html = '';
+    
+    // Arquivos
+    if (files.length > 0) {
+        html += '<div class="mt-2 mb-2">';
+        files.forEach(file => {
+            html += renderFileItem(file);
+        });
+        html += '</div>';
+    }
+    
+    // Subpastas
+    if (folders.length > 0) {
+        folders.forEach(folder => {
+            html += renderLazyFolderItem(folder, level);
+        });
+    }
+    
+    folderContent.innerHTML = html;
+}
+
+function renderFileItem(file) {
+    const icon = getFileIcon(file.mimeType);
+    const size = formatFileSize(file.size);
+    
+    return `
+        <div class="file-item d-flex align-items-center p-2 rounded hover-bg-light mb-1">
+            ${icon}
+            <span class="ms-2 flex-grow-1">${file.name}</span>
+            <small class="text-muted me-2">${size}</small>
+            <div class="btn-group btn-group-sm">
+                ${!file.mimeType.includes('folder') ? `
+                    <button class="btn btn-outline-success btn-sm" onclick="downloadFile('${file.id}', '${file.name.replace(/'/g, "\\'")}')" title="Download">
+                        <i class="fas fa-download"></i>
+                    </button>
+                ` : ''}
+                <button class="btn btn-outline-primary btn-sm" onclick="openFile('${file.id}')" title="Abrir">
+                    <i class="fas fa-external-link-alt"></i>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function closeSharedDrives() {
+    document.getElementById('shared-drives-section').style.display = 'none';
 }
 
 function searchFiles() {
@@ -224,7 +1370,10 @@ function searchFiles() {
 
 function displayFiles(files) {
     const container = document.getElementById('files-container');
-    const isGridView = document.getElementById('grid-view').checked;
+    if (!container) return;
+    
+    const gridViewElement = document.getElementById('grid-view');
+    const isGridView = gridViewElement ? gridViewElement.checked : true;
     
     if (files.length === 0) {
         container.innerHTML = '<div class="text-center text-muted py-5">Nenhum arquivo encontrado</div>';
@@ -248,6 +1397,7 @@ function displayGridView(files, container) {
                             <div class="file-icon mb-2">
                                 ${getFileIcon(file.mimeType)}
                             </div>
+                            ${file.shared || (file.ownedByMe === false) ? '<div class="mb-1"><span class="badge bg-info"><i class="fas fa-share-alt"></i></span></div>' : ''}
                             <h6 class="card-title small mb-1" title="${file.name}">
                                 ${truncateText(file.name, 20)}
                             </h6>
@@ -281,14 +1431,28 @@ function displayListView(files, container) {
                             <td>
                                 ${getFileIcon(file.mimeType)}
                                 <span class="ms-2">${file.name}</span>
+                                ${file.shared || (file.ownedByMe === false) ? '<span class="badge bg-info ms-2"><i class="fas fa-share-alt"></i> Compartilhado</span>' : ''}
                             </td>
                             <td>${getFileType(file.mimeType)}</td>
                             <td>${formatFileSize(file.size)}</td>
                             <td>${formatDate(file.modifiedTime)}</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary" onclick="openFile('${file.id}')">
-                                    <i class="fas fa-external-link-alt"></i>
-                                </button>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    ${!file.mimeType.includes('folder') ? `
+                                        <button class="btn btn-outline-success" onclick="downloadFile('${file.id}', '${file.name.replace(/'/g, "\\'")}')" title="Download">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                    ` : ''}
+                                    <button class="btn btn-outline-info" onclick="renameFile('${file.id}', '${file.name.replace(/'/g, "\\'")}')" title="Renomear">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="openFile('${file.id}')" title="Abrir no Google">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="deleteFile('${file.id}', '${file.name.replace(/'/g, "\\'")}')" title="Excluir">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     `).join('')}
@@ -401,13 +1565,11 @@ function updateStats() {
     const totalSize = files.reduce((sum, file) => sum + (parseInt(file.size) || 0), 0);
     document.getElementById('total-size').textContent = formatFileSize(totalSize);
     
-    const recentFiles = files.filter(file => {
-        const modified = new Date(file.modifiedTime);
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return modified > weekAgo;
-    }).length;
-    document.getElementById('recent-files').textContent = recentFiles;
+    // Conta arquivos compartilhados (shared=true ou ownedByMe=false)
+    const sharedFiles = currentFiles.filter(file => 
+        file.shared === true || file.ownedByMe === false
+    ).length;
+    document.getElementById('shared-files').textContent = sharedFiles;
 }
 
 function formatDate(dateString) {
@@ -428,22 +1590,1161 @@ function truncateText(text, maxLength) {
     return text.substring(0, maxLength) + '...';
 }
 
-function showAlert(message, type) {
+function renameFile(fileId, currentName) {
+    const newName = prompt(`Renomear arquivo:\n\nNome atual: ${currentName}\n\nDigite o novo nome:`, currentName);
+    
+    if (!newName || newName === currentName) {
+        return;
+    }
+    
+    fetch(`/api/drive/${fileId}/rename`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: newName })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === 'error') {
+            showAlert('Erro ao renomear arquivo: ' + result.message, 'danger');
+        } else {
+            showAlert('Arquivo renomeado com sucesso!', 'success');
+            refreshFiles();
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao renomear arquivo:', error);
+        showAlert('Erro ao renomear arquivo', 'danger');
+    });
+}
+
+function deleteFile(fileId, fileName) {
+    if (!confirm(`Tem certeza que deseja excluir:\n\n"${fileName}"?\n\nO arquivo será movido para a lixeira do Google Drive.`)) {
+        return;
+    }
+    
+    fetch(`/api/drive/${fileId}/delete`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === 'error') {
+            showAlert('Erro ao excluir arquivo: ' + result.message, 'danger');
+        } else {
+            showAlert('Arquivo movido para lixeira com sucesso!', 'success');
+            refreshFiles();
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao excluir arquivo:', error);
+        showAlert('Erro ao excluir arquivo', 'danger');
+    });
+}
+
+function downloadFile(fileId, fileName) {
+    showAlert('Preparando download...', 'info');
+    
+    // Cria link temporário para download
+    const link = document.createElement('a');
+    link.href = `/api/drive/${fileId}/download`;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    setTimeout(() => {
+        showAlert('Download iniciado!', 'success');
+    }, 1000);
+}
+
+function showAlert(message, type, duration = 5000) {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.style.position = 'fixed';
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.style.minWidth = '300px';
     alertDiv.innerHTML = `
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     
-    document.body.insertBefore(alertDiv, document.body.firstChild);
+    document.body.appendChild(alertDiv);
     
     setTimeout(() => {
         if (alertDiv.parentNode) {
             alertDiv.parentNode.removeChild(alertDiv);
         }
-    }, 5000);
+    }, duration);
 }
+
+// ============================================================================
+// FUNÇÕES PARA GERENCIAMENTO DE ESTRUTURA DE FUNCIONÁRIOS
+// ============================================================================
+
+function validateEmployeeStructure(employeeFolderId, driveId, employeeName) {
+    showAlert('Validando estrutura...', 'info', 2000);
+    
+    fetch('/api/drive/employee/validate-structure', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            employee_folder_id: employeeFolderId,
+            drive_id: driveId
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === 'success') {
+            const data = result.data;
+            
+            if (data.is_complete) {
+                showAlert(`✅ ${employeeName}: Estrutura completa (${data.conformity_percentage}%)`, 'success');
+            } else {
+                const missing = data.missing_folders.length;
+                showAlert(
+                    `⚠️ ${employeeName}: ${missing} pasta(s) faltando (${data.conformity_percentage}% completo)<br>` +
+                    `<small>Faltam: ${data.missing_folders.slice(0, 3).join(', ')}${missing > 3 ? '...' : ''}</small>`,
+                    'warning',
+                    8000
+                );
+            }
+        } else {
+            showAlert('Erro ao validar estrutura', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao validar estrutura', 'danger');
+    });
+}
+
+function completeEmployeeStructure(employeeFolderId, driveId, employeeName) {
+    if (!confirm(`Deseja completar a estrutura de pastas para:\n\n${employeeName}\n\nIsso criará automaticamente as pastas faltantes.`)) {
+        return;
+    }
+    
+    showAlert('Completando estrutura...', 'info', 3000);
+    
+    fetch('/api/drive/employee/complete-structure', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            employee_folder_id: employeeFolderId,
+            drive_id: driveId
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === 'success') {
+            const data = result.data;
+            const created = data.created.length;
+            
+            if (created > 0) {
+                showAlert(
+                    `✅ ${employeeName}: ${created} pasta(s) criada(s)!<br>` +
+                    `<small>Conformidade: ${data.validation_before.conformity_percentage}% → ${data.validation_after.conformity_percentage}%</small>`,
+                    'success',
+                    6000
+                );
+                
+                // Atualiza APENAS a pasta do funcionário
+                refreshEmployeeFolder(employeeFolderId, driveId);
+            } else {
+                showAlert(`✅ ${employeeName}: Estrutura já estava completa!`, 'info');
+            }
+        } else {
+            showAlert(`Erro: ${result.message || 'Falha ao completar estrutura'}`, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao completar estrutura', 'danger');
+    });
+}
+
+function createEmployeeStructure(employeeFolderId, driveId, employeeName) {
+    if (!confirm(`Deseja criar a estrutura COMPLETA de 12 pastas para:\n\n${employeeName}\n\nIsso criará todas as pastas padrão.`)) {
+        return;
+    }
+    
+    showAlert('Criando estrutura...', 'info', 3000);
+    
+    fetch('/api/drive/employee/create-structure', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            employee_folder_id: employeeFolderId,
+            drive_id: driveId
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === 'success') {
+            const data = result.data;
+            showAlert(
+                `✅ ${employeeName}: ${data.total_created} pastas criadas!` +
+                (data.total_errors > 0 ? `<br><small>${data.total_errors} erro(s)</small>` : ''),
+                data.total_errors > 0 ? 'warning' : 'success',
+                6000
+            );
+            
+            // Atualiza APENAS a pasta do funcionário
+            refreshEmployeeFolder(employeeFolderId, driveId);
+        } else {
+            showAlert('Erro ao criar estrutura', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao criar estrutura', 'danger');
+    });
+}
+
+function refreshEmployeeFolder(employeeFolderId, driveId) {
+    // Encontra o elemento da pasta do funcionário
+    const folderElement = document.querySelector(`[data-folder-id="${employeeFolderId}"]`);
+    
+    if (!folderElement) {
+        console.error('Elemento da pasta não encontrado');
+        return;
+    }
+    
+    const chevron = folderElement.querySelector('.folder-chevron');
+    const contentsDiv = folderElement.querySelector('.folder-contents');
+    
+    // Se estava fechada, abre
+    if (!chevron.classList.contains('fa-chevron-down')) {
+        chevron.classList.remove('fa-chevron-right');
+        chevron.classList.add('fa-chevron-down');
+    }
+    
+    // Mostra loading
+    contentsDiv.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div><small class="ms-2">Atualizando...</small></div>';
+    contentsDiv.style.display = 'block';
+    
+    // Função para extrair número do início do nome
+    function extractNumber(name) {
+        const match = name.match(/^(\d+(?:\.\d+)?)/);
+        return match ? parseFloat(match[1]) : Infinity;
+    }
+    
+    // Recarrega o conteúdo da pasta
+    fetch(`/api/drive/shared-drives/${driveId}/folder/${employeeFolderId}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'success') {
+                const contents = result.data.contents;
+                let folders = contents.folders || [];
+                let files = contents.files || [];
+                
+                // Ordena por número primeiro, depois alfabeticamente
+                folders.sort((a, b) => {
+                    const numA = extractNumber(a.name);
+                    const numB = extractNumber(b.name);
+                    if (numA !== numB) return numA - numB;
+                    return a.name.localeCompare(b.name, 'pt-BR');
+                });
+                files.sort((a, b) => {
+                    const numA = extractNumber(a.name);
+                    const numB = extractNumber(b.name);
+                    if (numA !== numB) return numA - numB;
+                    return a.name.localeCompare(b.name, 'pt-BR');
+                });
+                
+                // Pega o nível atual
+                const currentLevel = parseInt(folderElement.closest('.folder-level').style.marginLeft || 0) / 20;
+                
+                // Renderiza o conteúdo atualizado
+                contentsDiv.innerHTML = renderRealTimeFolderLevel(driveId, employeeFolderId, folders, files, currentLevel + 1);
+                
+                // Mostra feedback visual
+                contentsDiv.style.animation = 'none';
+                setTimeout(() => {
+                    contentsDiv.style.animation = 'fadeIn 0.3s ease-in';
+                }, 10);
+                
+            } else {
+                contentsDiv.innerHTML = `<div class="alert alert-warning alert-sm m-2">Erro ao atualizar pasta</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            contentsDiv.innerHTML = `<div class="alert alert-danger alert-sm m-2">Erro ao atualizar pasta</div>`;
+        });
+}
+
+// ============================================================================
+// ANÁLISE INTELIGENTE DE DOCUMENTOS COM IA
+// ============================================================================
+
+function analyzeEmployeeDocuments(employeeFolderId, driveId, employeeName) {
+    // Extrai código e nome do funcionário
+    const match = employeeName.match(/^(\d+)\s*-\s*(.+)$/);
+    if (!match) {
+        showAlert('Formato de nome de funcionário inválido', 'danger');
+        return;
+    }
+    
+    const employeeCode = match[1];
+    const employeeNameClean = match[2];
+    
+    showAlert('🤖 Analisando documentos com IA...', 'info', 3000);
+    
+    fetch('/api/drive/employee/analyze-documents', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            employee_folder_id: employeeFolderId,
+            employee_code: employeeCode,
+            employee_name: employeeNameClean,
+            drive_id: driveId
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === 'success') {
+            const data = result.data;
+            
+            if (data.total_to_rename === 0) {
+                showAlert(`✅ ${employeeName}: Todos os documentos já estão padronizados!`, 'success');
+            } else {
+                // Mostra modal com resultados da análise
+                showDocumentAnalysisModal(data, driveId, employeeName);
+            }
+        } else {
+            showAlert('Erro ao analisar documentos', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao analisar documentos', 'danger');
+    });
+}
+
+function showDocumentAnalysisModal(analysisData, driveId, employeeName) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = 'documentAnalysisModal';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        🤖 Análise Inteligente de Documentos - ${employeeName}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-robot"></i> Análise com IA do Conteúdo Real</h6>
+                        <p class="mb-2"><small>
+                            Os documentos foram analisados usando OCR e IA para identificar o tipo correto.
+                            <strong>Revise as sugestões antes de aplicar!</strong>
+                        </small></p>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Total analisados:</strong> ${analysisData.total_files_analyzed}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>A renomear:</strong> <span class="badge bg-warning">${analysisData.total_to_rename}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Já corretos:</strong> <span class="badge bg-success">${analysisData.total_ok}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-sm btn-outline-primary" onclick="selectAllSuggestions(true)">
+                                    <i class="fas fa-check-square"></i> Marcar Todos
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="selectAllSuggestions(false)">
+                                    <i class="fas fa-square"></i> Desmarcar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="max-height: 60vh; overflow-y: auto;">
+                        ${Object.entries(analysisData.by_folder).map(([folderName, folderData]) => `
+                            ${folderData.to_rename > 0 ? `
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <strong>📁 ${folderName}</strong>
+                                    <span class="badge bg-warning ms-2">${folderData.to_rename} para renomear</span>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th width="50px" class="text-center">
+                                                        <input type="checkbox" class="form-check-input select-folder-all" 
+                                                               onclick="toggleFolderSelection(this, '${folderName}')" checked>
+                                                    </th>
+                                                    <th width="30%">Nome Atual</th>
+                                                    <th width="15%">Tipo (IA)</th>
+                                                    <th width="10%">Confiança</th>
+                                                    <th width="30%">Nome Sugerido</th>
+                                                    <th width="10%">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${folderData.suggestions.filter(s => s.action === 'rename').map((suggestion, idx) => `
+                                                    <tr data-suggestion-id="${suggestion.file_id}" class="suggestion-row">
+                                                        <td class="text-center">
+                                                            <input type="checkbox" class="form-check-input suggestion-checkbox" 
+                                                                   data-folder="${folderName}"
+                                                                   data-file-id="${suggestion.file_id}" checked>
+                                                        </td>
+                                                        <td>
+                                                            <small class="text-muted">${suggestion.original_name}</small>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-${suggestion.confidence > 0.7 ? 'success' : suggestion.confidence > 0.4 ? 'warning' : 'danger'}">
+                                                                ${suggestion.identified_type}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <small>${(suggestion.confidence * 100).toFixed(0)}%</small>
+                                                        </td>
+                                                        <td>
+                                                            <input type="text" class="form-control form-control-sm suggested-name-input" 
+                                                                   value="${suggestion.suggested_name}" 
+                                                                   data-file-id="${suggestion.file_id}">
+                                                        </td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-outline-info" 
+                                                                    onclick="showDocumentPreview('${suggestion.file_id}', '${suggestion.original_name}', ${JSON.stringify(suggestion.extracted_text_preview || '').replace(/"/g, '&quot;')})"
+                                                                    title="Ver texto extraído">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Fechar (Sem Alterações)
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="confirmAndApplyRenames('${driveId}', '${employeeName}')">
+                        <i class="fas fa-exclamation-triangle"></i> Revisar e Aprovar Renomeações
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    modal.addEventListener('hidden.bs.modal', () => {
+        modal.remove();
+    });
+}
+
+function selectAllSuggestions(checked) {
+    document.querySelectorAll('.suggestion-checkbox').forEach(cb => {
+        cb.checked = checked;
+    });
+    document.querySelectorAll('.select-folder-all').forEach(cb => {
+        cb.checked = checked;
+    });
+}
+
+function toggleFolderSelection(checkbox, folderName) {
+    document.querySelectorAll(`.suggestion-checkbox[data-folder="${folderName}"]`).forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+}
+
+function showDocumentPreview(fileId, fileName, extractedText) {
+    const previewModal = document.createElement('div');
+    previewModal.className = 'modal fade';
+    previewModal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">📄 Texto Extraído - ${fileName}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <small><i class="fas fa-info-circle"></i> Texto extraído via OCR/IA do documento:</small>
+                    </div>
+                    <pre style="max-height: 400px; overflow-y: auto; background: #f8f9fa; padding: 15px; border-radius: 5px; font-size: 0.85rem;">${extractedText || 'Nenhum texto extraído disponível.'}</pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(previewModal);
+    const bsPreviewModal = new bootstrap.Modal(previewModal);
+    bsPreviewModal.show();
+    
+    previewModal.addEventListener('hidden.bs.modal', () => {
+        previewModal.remove();
+    });
+}
+
+function confirmAndApplyRenames(driveId, employeeName) {
+    // Coleta apenas as sugestões selecionadas com nomes editados
+    const selectedSuggestions = [];
+    
+    document.querySelectorAll('.suggestion-checkbox:checked').forEach(checkbox => {
+        const fileId = checkbox.dataset.fileId;
+        const row = checkbox.closest('tr');
+        const newNameInput = row.querySelector('.suggested-name-input');
+        const originalName = row.querySelector('td:nth-child(2) small').textContent;
+        const docType = row.querySelector('.badge').textContent.trim();
+        
+        selectedSuggestions.push({
+            file_id: fileId,
+            original_name: originalName,
+            suggested_name: newNameInput.value,
+            identified_type: docType,
+            action: 'rename'
+        });
+    });
+    
+    if (selectedSuggestions.length === 0) {
+        showAlert('⚠️ Nenhum documento selecionado para renomear', 'warning');
+        return;
+    }
+    
+    // CONFIRMAÇÃO DUPLA OBRIGATÓRIA
+    const message1 = `⚠️ ATENÇÃO: RENOMEAÇÃO DE DOCUMENTOS
+
+Você selecionou ${selectedSuggestions.length} documento(s) para renomear de:
+👤 ${employeeName}
+
+Esta ação irá:
+✓ Renomear os arquivos no Google Drive
+✓ Manter os arquivos nas mesmas pastas  
+✓ Preservar todo o conteúdo dos documentos
+
+⚠️ IMPORTANTE:
+• Revise TODOS os nomes antes de confirmar
+• Certifique-se que estão corretos
+• Esta ação NÃO pode ser desfeita facilmente
+
+Deseja continuar para revisão final?`;
+    
+    if (!confirm(message1)) {
+        return;
+    }
+    
+    // Mostra lista detalhada para revisão final
+    const detailsList = selectedSuggestions.map(s => 
+        `  ${s.original_name}\n  → ${s.suggested_name}`
+    ).join('\n\n');
+    
+    const message2 = `🔍 REVISÃO FINAL - CONFIRME OS NOMES:
+
+${detailsList}
+
+═══════════════════════════════════
+
+⚠️ ÚLTIMA CONFIRMAÇÃO:
+Renomear ${selectedSuggestions.length} arquivo(s)?
+
+Clique OK para EXECUTAR a renomeação.
+Clique Cancelar para ABORTAR.`;
+    
+    if (!confirm(message2)) {
+        showAlert('❌ Renomeação cancelada pelo usuário', 'info');
+        return;
+    }
+    
+    // Se passou pelas 2 confirmações, aplica
+    applySelectedRenames(driveId, employeeName, selectedSuggestions);
+}
+
+function applySelectedRenames(driveId, employeeName, selectedSuggestions) {
+    // Fecha o modal
+    const modals = document.querySelectorAll('.modal.show');
+    modals.forEach(m => {
+        const instance = bootstrap.Modal.getInstance(m);
+        if (instance) instance.hide();
+    });
+    
+    showAlert(`🔄 Renomeando ${selectedSuggestions.length} documento(s)...`, 'info', 5000);
+    
+    fetch('/api/drive/employee/rename-documents', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            suggestions: selectedSuggestions,
+            drive_id: driveId
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === 'success') {
+            const data = result.data;
+            showAlert(
+                `✅ Padronização concluída!<br>` +
+                `<small>✓ Sucesso: ${data.success} | ✗ Falhas: ${data.failed}</small>`,
+                data.failed > 0 ? 'warning' : 'success',
+                8000
+            );
+            
+            // Log dos resultados
+            console.log('Resultados da renomeação:', data.details);
+        } else {
+            showAlert('❌ Erro ao renomear documentos: ' + result.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('❌ Erro ao renomear documentos', 'danger');
+    });
+}
+
+function applyDocumentRenames(analysisData, driveId, employeeName) {
+    const suggestions = analysisData.all_suggestions.filter(s => s.action === 'rename');
+    
+    if (suggestions.length === 0) {
+        showAlert('Nenhum documento para renomear', 'info');
+        return;
+    }
+    
+    showAlert(`🔄 Renomeando ${suggestions.length} documento(s)...`, 'info', 5000);
+    
+    fetch('/api/drive/employee/rename-documents', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            suggestions: suggestions,
+            drive_id: driveId
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === 'success') {
+            const data = result.data;
+            showAlert(
+                `✅ Padronização concluída!<br>` +
+                `<small>Sucesso: ${data.success} | Falhas: ${data.failed}</small>`,
+                data.failed > 0 ? 'warning' : 'success',
+                8000
+            );
+        } else {
+            showAlert('Erro ao renomear documentos', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao renomear documentos', 'danger');
+    });
+}
+
+// ============================================================================
+// FUNÇÕES DE NOTIFICAÇÃO E APROVAÇÃO
+// ============================================================================
+
+function updateNotificationBadge() {
+    fetch('/api/notifications/pending')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const count = data.data.total_count || 0;
+                const badge = document.getElementById('notification-badge');
+                
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => console.error('Erro ao atualizar badge:', error));
+}
+
+function openNotificationsPanel() {
+    const modal = new bootstrap.Modal(document.getElementById('notificationsModal'));
+    modal.show();
+    loadNotifications();
+}
+
+function loadNotifications() {
+    // Mostra loading
+    document.getElementById('notifications-loading').style.display = 'block';
+    document.getElementById('notifications-content').style.display = 'none';
+    document.getElementById('notifications-empty').style.display = 'none';
+    
+    fetch('/api/notifications/pending')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const notificationData = data.data;
+                
+                // Esconde loading
+                document.getElementById('notifications-loading').style.display = 'none';
+                
+                if (notificationData.total_count === 0) {
+                    document.getElementById('notifications-empty').style.display = 'block';
+                    return;
+                }
+                
+                // Atualiza estatísticas
+                document.getElementById('total-pending-count').textContent = notificationData.total_count;
+                document.getElementById('total-employees-count').textContent = notificationData.total_employees;
+                
+                // Renderiza sugestões por funcionário
+                renderNotificationsByEmployee(notificationData.by_employee);
+                
+                document.getElementById('notifications-content').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar notificações:', error);
+            document.getElementById('notifications-loading').style.display = 'none';
+            showAlert('Erro ao carregar notificações', 'danger');
+        });
+}
+
+function renderNotificationsByEmployee(byEmployee) {
+    const container = document.getElementById('notifications-by-employee');
+    container.innerHTML = '';
+    
+    byEmployee.forEach(employee => {
+        const card = document.createElement('div');
+        card.className = 'card mb-3';
+        card.innerHTML = `
+            <div class="card-header bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>
+                        ${employee.employee_code} - ${employee.employee_name}
+                    </h5>
+                    <div>
+                        <span class="badge bg-warning text-dark me-2">${employee.count} documento(s)</span>
+                        <button class="btn btn-sm btn-success" onclick="approveEmployeeSuggestions('${employee.employee_code}')">
+                            <i class="fas fa-check-double me-1"></i>
+                            Aprovar Todos
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Pasta</th>
+                                <th>Nome Original</th>
+                                <th>Nome Sugerido</th>
+                                <th>Tipo</th>
+                                <th>Confiança</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${employee.suggestions.map(s => `
+                                <tr id="suggestion-row-${s.id}">
+                                    <td><small class="text-muted">${s.folder_type || 'N/A'}</small></td>
+                                    <td>
+                                        <small class="text-danger">
+                                            <i class="fas fa-times-circle me-1"></i>
+                                            ${s.original_name}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small class="text-success">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            <strong>${s.suggested_name}</strong>
+                                        </small>
+                                    </td>
+                                    <td><span class="badge bg-info">${s.document_type || 'N/A'}</span></td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar ${s.confidence > 0.7 ? 'bg-success' : 'bg-warning'}" 
+                                                 role="progressbar" 
+                                                 style="width: ${(s.confidence * 100).toFixed(0)}%">
+                                                ${(s.confidence * 100).toFixed(0)}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-success" onclick="approveSuggestion(${s.id})" title="Aprovar">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-danger" onclick="rejectSuggestion(${s.id})" title="Rejeitar">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(card);
+    });
+}
+
+function approveSuggestion(suggestionId) {
+    if (!confirm('Confirma a renomeação deste documento?')) {
+        return;
+    }
+    
+    fetch('/api/notifications/approve', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ suggestion_id: suggestionId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showAlert('Documento renomeado com sucesso!', 'success');
+            removeNotificationRow(suggestionId);
+            updateNotificationBadge();
+        } else {
+            showAlert('Erro: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao aprovar sugestão', 'danger');
+    });
+}
+
+function rejectSuggestion(suggestionId) {
+    if (!confirm('Deseja rejeitar esta sugestão?')) {
+        return;
+    }
+    
+    fetch('/api/notifications/reject', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ suggestion_id: suggestionId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showAlert('Sugestão rejeitada', 'info');
+            removeNotificationRow(suggestionId);
+            updateNotificationBadge();
+        } else {
+            showAlert('Erro: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao rejeitar sugestão', 'danger');
+    });
+}
+
+function approveEmployeeSuggestions(employeeCode) {
+    if (!confirm('Aprovar TODAS as sugestões deste funcionário?')) {
+        return;
+    }
+    
+    // Busca todos os IDs de sugestões do funcionário
+    const suggestionIds = [];
+    document.querySelectorAll('[id^="suggestion-row-"]').forEach(row => {
+        // Verifica se a linha pertence a este funcionário
+        const card = row.closest('.card');
+        if (card && card.textContent.includes(employeeCode)) {
+            const id = parseInt(row.id.replace('suggestion-row-', ''));
+            suggestionIds.push(id);
+        }
+    });
+    
+    if (suggestionIds.length === 0) {
+        showAlert('Nenhuma sugestão encontrada', 'warning');
+        return;
+    }
+    
+    fetch('/api/notifications/approve-batch', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ suggestion_ids: suggestionIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showAlert(`${data.data.success} documento(s) renomeado(s) com sucesso!`, 'success');
+            
+            // Remove as linhas aprovadas
+            suggestionIds.forEach(id => removeNotificationRow(id));
+            updateNotificationBadge();
+        } else {
+            showAlert('Erro: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao aprovar sugestões', 'danger');
+    });
+}
+
+function approveAllPending() {
+    if (!confirm('Aprovar TODAS as sugestões pendentes? Esta ação não pode ser desfeita!')) {
+        return;
+    }
+    
+    // Busca todos os IDs de sugestões
+    const suggestionIds = [];
+    document.querySelectorAll('[id^="suggestion-row-"]').forEach(row => {
+        const id = parseInt(row.id.replace('suggestion-row-', ''));
+        suggestionIds.push(id);
+    });
+    
+    if (suggestionIds.length === 0) {
+        showAlert('Nenhuma sugestão encontrada', 'warning');
+        return;
+    }
+    
+    fetch('/api/notifications/approve-batch', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ suggestion_ids: suggestionIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showAlert(`${data.data.success} documento(s) renomeado(s) com sucesso!`, 'success');
+            loadNotifications(); // Recarrega a lista
+            updateNotificationBadge();
+        } else {
+            showAlert('Erro: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao aprovar sugestões', 'danger');
+    });
+}
+
+function removeNotificationRow(suggestionId) {
+    const row = document.getElementById(`suggestion-row-${suggestionId}`);
+    if (row) {
+        row.style.opacity = '0';
+        setTimeout(() => {
+            row.remove();
+            
+            // Verifica se ainda há linhas no card
+            const card = row.closest('.card');
+            if (card) {
+                const tbody = card.querySelector('tbody');
+                if (tbody && tbody.children.length === 0) {
+                    card.remove();
+                }
+            }
+            
+            // Se não há mais cards, recarrega
+            const container = document.getElementById('notifications-by-employee');
+            if (container && container.children.length === 0) {
+                loadNotifications();
+            }
+        }, 300);
+    }
+}
+
+// ============================================================================
+// CONTROLE DO WORKER DE ANÁLISE
+// ============================================================================
+
+function showWorkerControlPanel() {
+    const modal = new bootstrap.Modal(document.getElementById('workerControlModal'));
+    modal.show();
+    checkWorkerStatus();
+}
+
+function checkWorkerStatus() {
+    fetch('/api/worker/status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const workerData = data.data;
+                const statusBadge = document.getElementById('worker-status-badge');
+                
+                if (workerData.running) {
+                    statusBadge.textContent = 'Ativo';
+                    statusBadge.className = 'badge bg-success';
+                } else {
+                    statusBadge.textContent = 'Parado';
+                    statusBadge.className = 'badge bg-danger';
+                }
+                
+                document.getElementById('worker-interval').textContent = workerData.interval;
+                document.getElementById('worker-pending-count').textContent = workerData.pending_count;
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao verificar status:', error);
+            showAlert('Erro ao verificar status do worker', 'danger');
+        });
+}
+
+function startWorker() {
+    if (!confirm('Iniciar o worker de análise automática?')) {
+        return;
+    }
+    
+    fetch('/api/worker/start', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showAlert('Worker iniciado com sucesso!', 'success');
+            checkWorkerStatus();
+        } else {
+            showAlert('Erro: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao iniciar worker', 'danger');
+    });
+}
+
+function scanAllDocuments() {
+    if (!confirm('Escanear TODOS os documentos dos funcionários?\n\nIsso pode levar alguns minutos dependendo da quantidade de arquivos.')) {
+        return;
+    }
+    
+    // IDs do Drive EMPRESAS
+    const driveId = '0AMPhv1qxMn1fUk9PVA';
+    const employeesFolderId = '1-gxsARkjRPoK8VSzUeUe0zb_5BDgGkCN'; // 1. RH (pasta correta)
+    
+    // Mostra painel de progresso
+    document.getElementById('progress-panel').style.display = 'block';
+    document.getElementById('scan-btn').disabled = true;
+    
+    // Limpa log
+    document.getElementById('progress-log').innerHTML = '<div class="text-muted">Iniciando scanner...</div>';
+    
+    showAlert('Scanner iniciado! Acompanhe o progresso abaixo...', 'info');
+    
+    fetch('/api/notifications/scan-all', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            drive_id: driveId,
+            employees_folder_id: employeesFolderId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Inicia polling de progresso
+            startProgressPolling();
+        } else {
+            showAlert('Erro: ' + data.message, 'danger');
+            document.getElementById('scan-btn').disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showAlert('Erro ao iniciar scanner', 'danger');
+        document.getElementById('scan-btn').disabled = false;
+    });
+}
+
+let progressInterval = null;
+
+function startProgressPolling() {
+    // Para polling anterior se existir
+    if (progressInterval) {
+        clearInterval(progressInterval);
+    }
+    
+    // Atualiza imediatamente
+    updateProgress();
+    
+    // Atualiza a cada 1 segundo
+    progressInterval = setInterval(updateProgress, 1000);
+}
+
+function updateProgress() {
+    fetch('/api/worker/progress')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const progress = data.data;
+                
+                // Atualiza barra de progresso
+                const progressBar = document.getElementById('progress-bar');
+                const progressPercentage = document.getElementById('progress-percentage');
+                progressBar.style.width = progress.progress_percentage + '%';
+                progressPercentage.textContent = progress.progress_percentage + '%';
+                
+                // Atualiza informações
+                document.getElementById('current-employee').textContent = progress.current_employee_name || '-';
+                document.getElementById('current-document').textContent = 
+                    progress.current_document ? 
+                    (progress.current_document.length > 50 ? 
+                     progress.current_document.substring(0, 47) + '...' : 
+                     progress.current_document) : '-';
+                
+                // Atualiza contadores
+                document.getElementById('total-scanned').textContent = progress.total_scanned;
+                document.getElementById('total-analyzed').textContent = progress.total_analyzed;
+                document.getElementById('total-suggestions').textContent = progress.total_suggestions;
+                
+                // Atualiza log
+                if (progress.logs && progress.logs.length > 0) {
+                    const logContainer = document.getElementById('progress-log');
+                    logContainer.innerHTML = progress.logs.map(log => 
+                        `<div>${log}</div>`
+                    ).join('');
+                    
+                    // Auto-scroll para o final
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                }
+                
+                // Se concluído, para o polling
+                if (!progress.is_scanning && progressInterval) {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                    document.getElementById('scan-btn').disabled = false;
+                    
+                    // Atualiza badge de notificações
+                    updateNotificationBadge();
+                    
+                    showAlert(`Scanner concluído! ${progress.total_suggestions} sugestão(ões) criada(s).`, 'success');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao atualizar progresso:', error);
+        });
+}
+
 </script>
 
 <style>
@@ -460,5 +2761,65 @@ function showAlert(message, type) {
 .text-purple {
     color: #6f42c1 !important;
 }
+
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.hover-bg-light:hover {
+    background-color: #f8f9fa !important;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.folder-chevron {
+    transition: transform 0.2s ease-in-out;
+}
+
+.folder-item {
+    user-select: none;
+}
+
+.folder-name {
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.alert-sm {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Botões de ações de funcionários */
+.employee-actions {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.btn-employee-action {
+    padding: 2px 6px;
+    font-size: 0.75rem;
+}
+
+/* Animação para atualização de conteúdo */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.folder-contents {
+    animation: fadeIn 0.3s ease-in;
+}
 </style>
 {% endblock %}
+
