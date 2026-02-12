@@ -9,26 +9,6 @@ import io
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 import tempfile
-
-try:
-    from google.cloud import vision
-    VISION_AVAILABLE = True
-except ImportError:
-    VISION_AVAILABLE = False
-    print("⚠️ Google Cloud Vision não disponível - usando análise básica")
-
-
-class DocumentAnalyzer:
-    """Classe para análise inteligente de documentos usando IA e OCR"""
-    
-    # Schema de padronização de nomenclatura
-
-import re
-import os
-import io
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime
-import tempfile
 from googleapiclient.discovery import build
 from auth.google_auth import google_auth
 
@@ -38,15 +18,12 @@ try:
     VISION_AVAILABLE = True
 except ImportError:
     VISION_AVAILABLE = False
-    print("⚠️ Google Cloud Vision não disponível - instale com: pip install google-cloud-vision")
 
 try:
     import PyPDF2
     PDF_AVAILABLE = True
 except ImportError:
     PDF_AVAILABLE = False
-    print("⚠️ PyPDF2 não disponível - instale com: pip install PyPDF2")
-
 
 class DocumentAnalyzer:
     """Classe para análise inteligente de documentos usando IA"""

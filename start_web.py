@@ -6,6 +6,7 @@ com proteção contra múltiplas instâncias
 
 import os
 import sys
+import tempfile
 import webbrowser
 import time
 import socket
@@ -15,7 +16,7 @@ import signal
 from threading import Timer
 
 # Arquivo de lock para prevenir múltiplas instâncias
-LOCK_FILE = '/tmp/painel_comando.lock'
+LOCK_FILE = os.path.join(tempfile.gettempdir(), 'painel_comando.lock')
 
 def check_port_in_use(port):
     """Verifica se a porta está em uso"""
@@ -23,18 +24,29 @@ def check_port_in_use(port):
         return s.connect_ex(('localhost', port)) == 0
 
 def kill_processes_on_port(port):
-    """Mata processos rodando na porta especificada"""
+    """Mata processos rodando na porta especificada (cross-platform)"""
     try:
-        # Usa lsof para encontrar processos na porta
-        result = subprocess.run(['lsof', '-ti', f':{port}'],
-                              capture_output=True, text=True)
-        if result.stdout.strip():
-            pids = result.stdout.strip().split('\n')
-            for pid in pids:
-                print(f"  Matando processo {pid} na porta {port}...")
-                subprocess.run(['kill', '-9', pid], stderr=subprocess.DEVNULL)
+        if sys.platform == 'win32':
+            result = subprocess.run(
+                ['netstat', '-ano'], capture_output=True, text=True
+            )
+            for line in result.stdout.split('\n'):
+                if f':{port}' in line and 'LISTENING' in line:
+                    pid = line.strip().split()[-1]
+                    print(f"  Matando processo {pid} na porta {port}...")
+                    subprocess.run(['taskkill', '/PID', pid, '/F'], stderr=subprocess.DEVNULL)
             time.sleep(1)
             return True
+        else:
+            result = subprocess.run(['lsof', '-ti', f':{port}'],
+                                  capture_output=True, text=True)
+            if result.stdout.strip():
+                pids = result.stdout.strip().split('\n')
+                for pid in pids:
+                    print(f"  Matando processo {pid} na porta {port}...")
+                    subprocess.run(['kill', '-9', pid], stderr=subprocess.DEVNULL)
+                time.sleep(1)
+                return True
         return False
     except Exception as e:
         print(f"  Erro ao tentar matar processos: {e}")
@@ -92,7 +104,8 @@ def main():
     # Registra handlers de limpeza
     atexit.register(remove_lock_file)
     signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
+    if hasattr(signal, 'SIGTERM'):
+        signal.signal(signal.SIGTERM, signal_handler)
 
     print("=" * 60)
     print("Painel de Comando - Iniciando...")

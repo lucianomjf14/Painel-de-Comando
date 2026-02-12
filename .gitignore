@@ -1,8 +1,12 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# C extensions
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -19,26 +23,35 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
-# Virtual Environment
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
+# PyInstaller
+*.manifest
+*.spec
 
-# Environment variables
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Environments
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Google API credentials and tokens
-credentials.json
-token.json
-client_secret_*.json
+.venv
+env/
+venv/
+ENV/
 
 # IDE
 .vscode/
@@ -49,64 +62,25 @@ client_secret_*.json
 
 # OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Logs
-*.log
-logs/
+# ===== Credenciais e tokens (NUNCA commitar!) =====
+credentials.json
+client_secret_*.json
+token.pickle
+token.json
+oauth_config.json
+oauth_consent_config.json
+*.pickle
 
-# Temporary files
-temp/
-tmp/
-*.tmp
+# ===== Banco de dados local =====
+document_analysis.db
+*.db
 
-# Flask
-instance/
-.webassets-cache
+# ===== Arquivos de diagnóstico/debug =====
+diagnostico_completo.txt
+relatorio_*.txt
 
-# Testing
-.coverage
-.pytest_cache/
-htmlcov/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# PEP 582
-__pypackages__/
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
+# ===== Lock files =====
+*.lock

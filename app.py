@@ -174,13 +174,14 @@ def ensure_setup():
                     document_worker.set_drive_manager(drive_manager)
                     
                     # Configura auto-scan para o Drive EMPRESAS
-                    drive_id = '0AMPhv1qxMn1fUk9PVA'
-                    employees_folder_id = '1-gxsARkjRPoK8VSzUeUe0zb_5BDgGkCN'  # ID correto - 1. RH
-                    document_worker.configure_auto_scan(drive_id, employees_folder_id)
-                    
-                    # Inicia o worker com auto-scan ativo
-                    document_worker.start()
-                    print(f"✅ Worker ativo com auto-scan (intervalo: {document_worker.scan_interval}s)")
+                    drive_id = os.getenv('AUTO_SCAN_DRIVE_ID', '')
+                    employees_folder_id = os.getenv('AUTO_SCAN_FOLDER_ID', '')
+                    if drive_id and employees_folder_id:
+                        document_worker.configure_auto_scan(drive_id, employees_folder_id)
+                        document_worker.start()
+                        print(f"✅ Worker ativo com auto-scan (intervalo: {document_worker.scan_interval}s)")
+                    else:
+                        print("⚠️  Auto-scan desabilitado: configure AUTO_SCAN_DRIVE_ID e AUTO_SCAN_FOLDER_ID no .env")
                 
             else:
                 print("Aviso: setup inicial incompleto. Verifique autenticação e APIs.")

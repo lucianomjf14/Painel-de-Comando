@@ -393,60 +393,6 @@ class GoogleDriveManager:
             print(f"Erro na busca: {e}")
             return []
     
-    # ===== MÉTODOS COM CACHE E SINCRONIZAÇÃO (DESABILITADOS) =====
-    
-    def get_cached_drives_with_metadata(self) -> List[Dict[str, Any]]:
-        """Retorna drives compartilhados do cache com metadados de sincronização"""
-        return self.cache.get_cached_drives()
-    
-    def get_cached_folder_contents(self, drive_id: str, folder_id: Optional[str] = None) -> Dict[str, Any]:
-        """Retorna conteúdo de uma pasta do cache (lazy loading)"""
-        items = self.cache.get_cached_items(drive_id, folder_id)
-        
-        folders = [item for item in items if item['is_folder']]
-        files = [item for item in items if not item['is_folder']]
-        
-        return {
-            'folders': folders,
-            'files': files,
-            'total': len(items)
-        }
-    
-    def search_in_cache(self, drive_id: str, query: str) -> List[Dict[str, Any]]:
-        """Busca itens no cache"""
-        return self.cache.search_items(drive_id, query)
-    
-    def get_folder_statistics(self, drive_id: str, folder_id: Optional[str] = None) -> Dict[str, int]:
-        """Retorna estatísticas de uma pasta do cache"""
-        return self.cache.get_folder_stats(drive_id, folder_id)
-    
-    def sync_shared_drive(self, drive_id: str, drive_name: str, force: bool = False) -> bool:
-        """Inicia sincronização de um drive compartilhado"""
-        return self.synchronizer.start_sync(drive_id, drive_name, force=force)
-    
-    def get_sync_progress(self, drive_id: str) -> Optional[Dict[str, Any]]:
-        """Retorna progresso de sincronização"""
-        return self.synchronizer.get_progress(drive_id)
-    
-    def is_drive_syncing(self, drive_id: str) -> bool:
-        """Verifica se drive está sendo sincronizado"""
-        return self.synchronizer.is_syncing(drive_id)
-    
-    def sync_all_shared_drives(self):
-        """Sincroniza todos os drives compartilhados"""
-        drives = self.list_shared_drives()
-        if drives:
-            self.synchronizer.sync_all_drives(drives)
-        return len(drives)
-    
-    def refresh_drive_cache(self, drive_id: str):
-        """Limpa e re-sincroniza cache de um drive"""
-        self.cache.clear_drive_cache(drive_id)
-        drives = self.list_shared_drives()
-        drive = next((d for d in drives if d['id'] == drive_id), None)
-        if drive:
-            self.sync_shared_drive(drive_id, drive['name'], force=True)
-    
     def list_shared_with_me(self, max_results: int = MAX_RESULTS) -> List[Dict[str, Any]]:
         """Lista apenas arquivos compartilhados comigo"""
         try:
