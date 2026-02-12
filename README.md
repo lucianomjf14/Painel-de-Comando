@@ -183,24 +183,25 @@ python cli.py sheets create --title "Nova Planilha"
 
 ---
 
-## 👤 Autor
+## Autor
 
-<table>
-  <tr>
-    <td align="center">
-      <img src="https://avatars.githubusercontent.com/u/203840322?v=4" width="100px;" alt="Foto do autor"/><br>
-      <sub><b>Luciano Silveira</b></sub><br>
-      <sub>Analista de TI | Mestrando em Administração (MADE/UNESA)</sub><br>
-      <sub>📍 Rio de Janeiro, RJ</sub>
-    </td>
-  </tr>
-</table>
+<div align="center">
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/luciano-silveira-a0b78a1b4/)
-[![DIO](https://img.shields.io/badge/DIO-000000?style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCI+PHRleHQgeD0iMCIgeT0iMTUiIGZvbnQtc2l6ZT0iMTUiIGZpbGw9IndoaXRlIj5EPC90ZXh0Pjwvc3ZnPg==&logoColor=white)](https://www.dio.me/users/lucianomjf14)
-[![Lattes](https://img.shields.io/badge/Lattes-005A9C?style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCI+PHRleHQgeD0iMCIgeT0iMTUiIGZvbnQtc2l6ZT0iMTUiIGZpbGw9IndoaXRlIj5MPC90ZXh0Pjwvc3ZnPg==&logoColor=white)](http://lattes.cnpq.br/1848255498983592)
-[![Gmail](https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:lucianomjf14@gmail.com)
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/lucianomjf14)
+<img src="https://github.com/lucianomjf14.png" width="150" style="border-radius: 50%;" alt="Luciano Marinho Silveira">
+
+### Luciano Marinho Silveira
+
+Mestre em Administração | Gestão e Arquitetura Organizacional | Processos, Dados e Inovação | Inteligência Artificial
+
+Juiz de Fora, MG, Brasil
+
+[![GitHub](https://img.shields.io/badge/GitHub-lucianomjf14-181717?style=flat-square&logo=github)](https://github.com/lucianomjf14)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Luciano_Silveira-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/luciano-marinho-silveira)
+[![DIO](https://img.shields.io/badge/DIO-Perfil-7C3AED?style=flat-square)](https://web.dio.me/users/lucianomjf14)
+[![Lattes](https://img.shields.io/badge/Lattes-CNPq-006B3F?style=flat-square)](http://lattes.cnpq.br/8717991759915273)
+[![Email](https://img.shields.io/badge/Email-lucianomjf14%40gmail.com-EA4335?style=flat-square&logo=gmail)](mailto:lucianomjf14@gmail.com)
+
+</div>
 
 ---
 
