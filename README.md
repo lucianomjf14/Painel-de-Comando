@@ -8,6 +8,8 @@
 ![Flask](https://img.shields.io/badge/Flask-2.0+-000000?style=for-the-badge&logo=flask&logoColor=white)
 ![Google Cloud](https://img.shields.io/badge/Google_Cloud-APIs-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-MVP_v1.0-blue?style=for-the-badge)
+![Fase](https://img.shields.io/badge/Fase-Validação-orange?style=for-the-badge)
 
 *Painel web unificado para gerenciamento de Gmail, Google Drive e Google Sheets, com análise inteligente de documentos via IA (OCR).*
 
@@ -17,6 +19,8 @@
 
 ## 📋 Sobre o Projeto
 
+
+>  **Este é um MVP (Minimum Viable Product).** O foco desta versão foi validar a automação do ciclo Gmail  Drive  IA  Sheets e entregar valor ao usuário o mais rápido possível. O roadmap de evolução técnica está documentado abaixo.
 O **Painel de Comando** é uma aplicação Python que integra três APIs do Google Workspace (Gmail, Drive e Sheets) em um único painel web, com interface CLI complementar. Inclui um módulo de IA para análise e padronização automática de documentos armazenados no Google Drive, utilizando OCR via Google Cloud Vision API.
 
 ### ✨ Funcionalidades
