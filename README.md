@@ -47,6 +47,18 @@ O **Painel de Comando** é uma aplicação Python que integra três APIs do Goog
 
 ---
 
+## 🔄 Fluxo de Automação
+
+```mermaid
+flowchart LR
+    A["Gmail\nBusca inteligente"] --> B["Drive\nExtração de anexos"]
+    B --> C["IA / OCR\nAnálise e classificação"]
+    C --> D["Sheets\nRegistro estruturado"]
+    D --> E["Dashboard\nVisualização e decisão"]
+```
+
+---
+
 ## 🏗️ Arquitetura
 
 ```
